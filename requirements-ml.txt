@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# 完整RAG和AutoGluon参数预测功能。
+# 体积较大，基础页面、聊天、带隙和老化功能可先只安装requirements.txt。
+FlagEmbedding>=1.3,<2.0
+autogluon.tabular>=1.2,<2.0

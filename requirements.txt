@@ -1,0 +1,19 @@
+# Web与API
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+gradio>=4.44,<6.0
+openai>=1.60,<4.0
+pydantic>=2.9,<3.0
+python-dotenv>=1.0,<2.0
+requests>=2.31,<3.0
+
+# MCP与科学计算
+mcp>=1.6,<2.0
+numpy>=1.26,<3.0
+pandas>=2.2,<3.0
+matplotlib>=3.8,<4.0
+Pillow>=10.0,<13.0
+scikit-learn>=1.5,<2.0
+openpyxl>=3.1,<4.0
+torch>=2.3,<3.0
+tqdm>=4.66,<5.0
