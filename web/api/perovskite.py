@@ -2,8 +2,8 @@ import requests
 import base64
 from PIL import Image
 import io
-from datetime import datetime
 import config
+from api.status import response_error_message
 
 API_BASE_URL = config.API_BASE_URL
 
@@ -27,7 +27,7 @@ def call_perovskite_predict_api(perovskite_type, *args):
         params_dict = {name: float(value) for name, value in zip(param_names, args)}
         params_dict['perovskite_type'] = perovskite_type
         api_url = f"{API_BASE_URL}/perovskite/predict"
-        response = requests.post(api_url, json=params_dict)
+        response = requests.post(api_url, json=params_dict, timeout=120)
         if response.status_code == 200:
             data = response.json()
             predictions = data["predictions"]
@@ -43,26 +43,9 @@ def call_perovskite_predict_api(perovskite_type, *args):
                 image_url = data["image_url"]
                 full_url = f"{API_BASE_URL.replace('/api', '')}{image_url}"
                 jv_curve_img = full_url
-            return result_text, jv_curve_img
+            return result_text, jv_curve_img, True
         else:
-            return f"预测失败: {response.text}", None
+            detail = response_error_message(response)
+            return f"当前无法完成预测：{detail}", None, False
     except Exception as e:
-        return f"预测出错: {str(e)}", None
-
-def debounced_predict(fn, delay_ms=500):
-    last_call_time = [0]
-    is_computing = [False]
-    def debounced(*args):
-        nonlocal last_call_time
-        current_time = datetime.now().timestamp() * 1000
-        time_since_last_call = current_time - last_call_time[0]
-        if is_computing[0] or time_since_last_call < delay_ms:
-            return None, None
-        is_computing[0] = True
-        try:
-            last_call_time[0] = current_time
-            result = fn(*args)
-            return result
-        finally:
-            is_computing[0] = False
-    return debounced 
+        return f"预测请求失败：{str(e)}", None, False

@@ -1,5 +1,6 @@
 import requests
 import config
+from api.status import response_error_message
 
 API_BASE_URL = config.API_BASE_URL
 
@@ -18,9 +19,9 @@ def update_bandgap_inputs_visibility(perovskite_type):
         visibility_updates['csfa_group']
     ]
 
-def predict_perovskite_bandgap_wrapper(perovskite_type, br_perc, cs_r, fa_r, i_r_csm, ma_r, i_r_mafa, cs_r_csfa, i_r_csfa):
+def predict_perovskite_bandgap_wrapper(perovskite_type, br_perc, cs_r, fa_r, i_r_csm, ma_r, i_r_mafa, cs_r_csfa, i_r_csfa, method="formula"):
     bandgap_status = "_状态: 计算中..._"
-    payload = {"perovskite_type": perovskite_type}
+    payload = {"perovskite_type": perovskite_type, "method": method}
     try:
         if perovskite_type == "MAPbIBr":
             payload["Br_percentage"] = float(br_perc)
@@ -37,11 +38,18 @@ def predict_perovskite_bandgap_wrapper(perovskite_type, br_perc, cs_r, fa_r, i_r
         else:
             return "无效的钙钛矿类型", "_状态: 错误_"
         api_url = f"{API_BASE_URL}/perovskite/predict-bandgap"
-        response = requests.post(api_url, json=payload)
+        response = requests.post(api_url, json=payload, timeout=30)
+        if response.status_code == 503:
+            return response_error_message(response), "_状态: 模型不可用_"
+        if response.status_code in (400, 422):
+            return response_error_message(response), "_状态: 输入错误_"
         response.raise_for_status()
         data = response.json()
         if "bandgap" in data:
-            result = f"预测带隙: {data['bandgap']:.4f} eV"
+            result = f"带隙计算值: {data['bandgap']:.4f} eV\n{data.get('limitation', '')}"
+            if "validation" in data:
+                metric=data["validation"]["overall_publication_holdout"]
+                result += f"\n文献分组留出 MAE: {metric['mae_eV']:.4f} eV，样本数: {metric['count']}"
             status = "_状态: 完成_"
         elif "detail" in data:
             detail_info = data['detail']

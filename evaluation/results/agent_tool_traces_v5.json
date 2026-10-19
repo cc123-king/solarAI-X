@@ -1,0 +1,664 @@
+[
+  {
+    "task_id": "1586a61842504746a3cb46a0c983da80",
+    "status": "completed",
+    "result": "{\"results\":[{\"Br_percentage\":0.5,\"bandgap\":1.64,\"unit\":\"eV\"}]}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.5,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.5,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          },
+          "result": {
+            "bandgap": 1.64,
+            "unit": "eV",
+            "formula": "1.565 + 0.15 * Br_percentage",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Br_percentage": 0.5
+            },
+            "validation_status": "formula_only",
+            "empirical_accuracy_verified": false,
+            "limitation": "原项目线性公式演示；结果需要实验验证，未提供预测精度指标。",
+            "summary": "带隙计算值为 1.640 eV。原项目线性公式演示；结果需要实验验证，未提供预测精度指标。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "db7d2261fb4b4c58a2fab5c742d85152",
+    "status": "completed",
+    "result": "{\"results\":[{\"Br_percentage\":0,\"bandgap\":1.565,\"unit\":\"eV\"},{\"Br_percentage\":0.5,\"bandgap\":1.64,\"unit\":\"eV\"},{\"Br_percentage\":1,\"bandgap\":1.715,\"unit\":\"eV\"}],\"chart_file\":\"plot_results/curve_20261019_110911_943207.png\"}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          },
+          "result": {
+            "bandgap": 1.565,
+            "unit": "eV",
+            "formula": "1.565 + 0.15 * Br_percentage",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Br_percentage": 0.0
+            },
+            "validation_status": "formula_only",
+            "empirical_accuracy_verified": false,
+            "limitation": "原项目线性公式演示；结果需要实验验证，未提供预测精度指标。",
+            "summary": "带隙计算值为 1.565 eV。原项目线性公式演示；结果需要实验验证，未提供预测精度指标。"
+          }
+        }
+      },
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.5,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.5,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          },
+          "result": {
+            "bandgap": 1.64,
+            "unit": "eV",
+            "formula": "1.565 + 0.15 * Br_percentage",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Br_percentage": 0.5
+            },
+            "validation_status": "formula_only",
+            "empirical_accuracy_verified": false,
+            "limitation": "原项目线性公式演示；结果需要实验验证，未提供预测精度指标。",
+            "summary": "带隙计算值为 1.640 eV。原项目线性公式演示；结果需要实验验证，未提供预测精度指标。"
+          }
+        }
+      },
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 1,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 1,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          },
+          "result": {
+            "bandgap": 1.7149999999999999,
+            "unit": "eV",
+            "formula": "1.565 + 0.15 * Br_percentage",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Br_percentage": 1.0
+            },
+            "validation_status": "formula_only",
+            "empirical_accuracy_verified": false,
+            "limitation": "原项目线性公式演示；结果需要实验验证，未提供预测精度指标。",
+            "summary": "带隙计算值为 1.715 eV。原项目线性公式演示；结果需要实验验证，未提供预测精度指标。"
+          }
+        }
+      },
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "draw_curve",
+          "arguments": {
+            "x_data": [
+              0,
+              0.5,
+              1
+            ],
+            "y_data": [
+              1.565,
+              1.64,
+              1.715
+            ],
+            "x_label": "Br Percentage",
+            "y_label": "Bandgap (eV)",
+            "title": "MAPbIBr Bandgap vs Br Percentage",
+            "line_style": "o-",
+            "color": "blue",
+            "fig_size": [
+              10,
+              6
+            ],
+            "save_file": true
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "draw_curve",
+          "arguments": {
+            "x_data": [
+              0,
+              0.5,
+              1
+            ],
+            "y_data": [
+              1.565,
+              1.64,
+              1.715
+            ],
+            "x_label": "Br Percentage",
+            "y_label": "Bandgap (eV)",
+            "title": "MAPbIBr Bandgap vs Br Percentage",
+            "line_style": "o-",
+            "color": "blue",
+            "fig_size": [
+              10,
+              6
+            ],
+            "save_file": true
+          },
+          "result": {
+            "file_path": "plot_results/curve_20261019_110911_943207.png"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "712ab0f3d5214cd9ae399b0ff7a533e0",
+    "status": "completed",
+    "result": "{\"results\":[{\"Br_percentage\":0.0,\"bandgap\":1.565,\"unit\":\"eV\"}]}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.0,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.0,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          },
+          "result": {
+            "bandgap": 1.565,
+            "unit": "eV",
+            "formula": "1.565 + 0.15 * Br_percentage",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Br_percentage": 0.0
+            },
+            "validation_status": "formula_only",
+            "empirical_accuracy_verified": false,
+            "limitation": "原项目线性公式演示；结果需要实验验证，未提供预测精度指标。",
+            "summary": "带隙计算值为 1.565 eV。原项目线性公式演示；结果需要实验验证，未提供预测精度指标。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "770742d27f5d40d9b2545f8c7cd2849f",
+    "status": "completed",
+    "result": "{\"results\": [{\"Br_percentage\": 1.0, \"bandgap\": 1.7149999999999999, \"unit\": \"eV\"}]}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 1.0,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 1.0,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          },
+          "result": {
+            "bandgap": 1.7149999999999999,
+            "unit": "eV",
+            "formula": "1.565 + 0.15 * Br_percentage",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Br_percentage": 1.0
+            },
+            "validation_status": "formula_only",
+            "empirical_accuracy_verified": false,
+            "limitation": "原项目线性公式演示；结果需要实验验证，未提供预测精度指标。",
+            "summary": "带隙计算值为 1.715 eV。原项目线性公式演示；结果需要实验验证，未提供预测精度指标。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "d9102a4264d141df82295be3a0b47f1b",
+    "status": "completed",
+    "result": "{\"results\":[{\"Br_percentage\":0.25,\"bandgap\":1.6025,\"unit\":\"eV\"},{\"Br_percentage\":0.75,\"bandgap\":1.6775,\"unit\":\"eV\"}]}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.25,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.25,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          },
+          "result": {
+            "bandgap": 1.6025,
+            "unit": "eV",
+            "formula": "1.565 + 0.15 * Br_percentage",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Br_percentage": 0.25
+            },
+            "validation_status": "formula_only",
+            "empirical_accuracy_verified": false,
+            "limitation": "原项目线性公式演示；结果需要实验验证，未提供预测精度指标。",
+            "summary": "带隙计算值为 1.603 eV。原项目线性公式演示；结果需要实验验证，未提供预测精度指标。"
+          }
+        }
+      },
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.75,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.75,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          },
+          "result": {
+            "bandgap": 1.6775,
+            "unit": "eV",
+            "formula": "1.565 + 0.15 * Br_percentage",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Br_percentage": 0.75
+            },
+            "validation_status": "formula_only",
+            "empirical_accuracy_verified": false,
+            "limitation": "原项目线性公式演示；结果需要实验验证，未提供预测精度指标。",
+            "summary": "带隙计算值为 1.677 eV。原项目线性公式演示；结果需要实验验证，未提供预测精度指标。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "f02f70a67f7642b69e4a5df78d1856e8",
+    "status": "completed",
+    "result": "{\"results\": [{\"Br_percentage\": 0.0, \"bandgap\": 1.5907482235401573, \"unit\": \"eV\"}]}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.0,
+            "perovskite_type": "MAPbIBr",
+            "method": "measured_baseline"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.0,
+            "perovskite_type": "MAPbIBr",
+            "method": "measured_baseline"
+          },
+          "result": {
+            "bandgap": 1.5907482235401573,
+            "unit": "eV",
+            "method": "measured_literature_ridge_baseline",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Cs": 0.0,
+              "MA": 1.0,
+              "Br": 0.0
+            },
+            "validation_status": "grouped_literature_holdout",
+            "empirical_accuracy_verified": false,
+            "validation": {
+              "available": true,
+              "reason": "仅在测量数据邻近组分范围内提供文献基线估计。",
+              "family_test_count": 17,
+              "family_test_mae_eV": 0.017904627962820486,
+              "overall_publication_holdout": {
+                "mae_eV": 0.027029858226327166,
+                "rmse_eV": 0.04656870346447754,
+                "r2": 0.922314392511735,
+                "count": 30
+              },
+              "source_doi": "10.5281/zenodo.5837035",
+              "independent_new_experiments": false
+            },
+            "nearest_training_composition_linf": 0.0,
+            "limitation": "公开光谱文献数据的组分基线，按论文与组分分别留出验证；不包含工艺与相变因素，也未做新的实验验证。",
+            "summary": "带隙计算值为 1.591 eV。公开光谱文献数据的组分基线，按论文与组分分别留出验证；不包含工艺与相变因素，也未做新的实验验证。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "8323a0a305fe429587e9556eb65beae7",
+    "status": "completed",
+    "result": "{\"results\":[{\"Br_percentage\":0.05,\"bandgap\":1.615899532364914,\"unit\":\"eV\"}]}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.05,
+            "perovskite_type": "MAPbIBr",
+            "method": "measured_baseline"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0.05,
+            "perovskite_type": "MAPbIBr",
+            "method": "measured_baseline"
+          },
+          "result": {
+            "bandgap": 1.615899532364914,
+            "unit": "eV",
+            "method": "measured_literature_ridge_baseline",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Cs": 0.0,
+              "MA": 1.0,
+              "Br": 0.05
+            },
+            "validation_status": "grouped_literature_holdout",
+            "empirical_accuracy_verified": false,
+            "validation": {
+              "available": true,
+              "reason": "仅在测量数据邻近组分范围内提供文献基线估计。",
+              "family_test_count": 17,
+              "family_test_mae_eV": 0.017904627962820486,
+              "overall_publication_holdout": {
+                "mae_eV": 0.027029858226327166,
+                "rmse_eV": 0.04656870346447754,
+                "r2": 0.922314392511735,
+                "count": 30
+              },
+              "source_doi": "10.5281/zenodo.5837035",
+              "independent_new_experiments": false
+            },
+            "nearest_training_composition_linf": 0.05,
+            "limitation": "公开光谱文献数据的组分基线，按论文与组分分别留出验证；不包含工艺与相变因素，也未做新的实验验证。",
+            "summary": "带隙计算值为 1.616 eV。公开光谱文献数据的组分基线，按论文与组分分别留出验证；不包含工艺与相变因素，也未做新的实验验证。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "8eca16e9d81741619e768529dbb2bd7f",
+    "status": "completed",
+    "result": "{\n  \"results\": [\n    {\n      \"method\": \"formula\",\n      \"Br_percentage\": 0,\n      \"bandgap\": 1.565000,\n      \"unit\": \"eV\"\n    },\n    {\n      \"method\": \"measured_baseline\",\n      \"Br_percentage\": 0,\n      \"bandgap\": 1.590748,\n      \"unit\": \"eV\"\n    }\n  ]\n}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0,
+            "perovskite_type": "MAPbIBr",
+            "method": "formula"
+          },
+          "result": {
+            "bandgap": 1.565,
+            "unit": "eV",
+            "formula": "1.565 + 0.15 * Br_percentage",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Br_percentage": 0.0
+            },
+            "validation_status": "formula_only",
+            "empirical_accuracy_verified": false,
+            "limitation": "原项目线性公式演示；结果需要实验验证，未提供预测精度指标。",
+            "summary": "带隙计算值为 1.565 eV。原项目线性公式演示；结果需要实验验证，未提供预测精度指标。"
+          }
+        }
+      },
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0,
+            "perovskite_type": "MAPbIBr",
+            "method": "measured_baseline"
+          }
+        }
+      },
+      {
+        "kind": "tool_completed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "Br_percentage": 0,
+            "perovskite_type": "MAPbIBr",
+            "method": "measured_baseline"
+          },
+          "result": {
+            "bandgap": 1.5907482235401573,
+            "unit": "eV",
+            "method": "measured_literature_ridge_baseline",
+            "perovskite_type": "MAPbIBr",
+            "input_parameters": {
+              "Cs": 0.0,
+              "MA": 1.0,
+              "Br": 0.0
+            },
+            "validation_status": "grouped_literature_holdout",
+            "empirical_accuracy_verified": false,
+            "validation": {
+              "available": true,
+              "reason": "仅在测量数据邻近组分范围内提供文献基线估计。",
+              "family_test_count": 17,
+              "family_test_mae_eV": 0.017904627962820486,
+              "overall_publication_holdout": {
+                "mae_eV": 0.027029858226327166,
+                "rmse_eV": 0.04656870346447754,
+                "r2": 0.922314392511735,
+                "count": 30
+              },
+              "source_doi": "10.5281/zenodo.5837035",
+              "independent_new_experiments": false
+            },
+            "nearest_training_composition_linf": 0.0,
+            "limitation": "公开光谱文献数据的组分基线，按论文与组分分别留出验证；不包含工艺与相变因素，也未做新的实验验证。",
+            "summary": "带隙计算值为 1.591 eV。公开光谱文献数据的组分基线，按论文与组分分别留出验证；不包含工艺与相变因素，也未做新的实验验证。"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "8f4d10066cd84a58a8609e34c99473b7",
+    "status": "completed",
+    "result": "{\"status\":\"invalid_input\",\"bandgap\":null}",
+    "events": []
+  },
+  {
+    "task_id": "35823fb65c1b4ceca6f8180bcaa68b7c",
+    "status": "completed",
+    "result": "{\"status\":\"unavailable\",\"bandgap\":null}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "perovskite_type": "MAFA",
+            "MA_ratio": 0.5,
+            "I_ratio": 0.8,
+            "method": "formula"
+          }
+        }
+      },
+      {
+        "kind": "tool_failed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "perovskite_type": "MAFA",
+            "MA_ratio": 0.5,
+            "I_ratio": 0.8,
+            "method": "formula"
+          },
+          "error_type": "ToolResultError"
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "486b16b12c754c728400c41fa7ee01ef",
+    "status": "completed",
+    "result": "{\"status\":\"unavailable\",\"bandgap\":null}",
+    "events": [
+      {
+        "kind": "tool_started",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "perovskite_type": "CsFA",
+            "Cs_ratio": 0.2,
+            "I_ratio": 0.8,
+            "method": "measured_baseline"
+          }
+        }
+      },
+      {
+        "kind": "tool_failed",
+        "payload": {
+          "tool": "predict_perovskite_bandgap",
+          "arguments": {
+            "perovskite_type": "CsFA",
+            "Cs_ratio": 0.2,
+            "I_ratio": 0.8,
+            "method": "measured_baseline"
+          },
+          "error_type": "ToolResultError"
+        }
+      }
+    ]
+  },
+  {
+    "task_id": "5e2228d74c044dfbbaac1941a074fcfd",
+    "status": "completed",
+    "result": "{\"status\":\"unsupported\",\"bandgap\":null}",
+    "events": []
+  }
+]

@@ -1,0 +1,114 @@
+[
+  {
+    "id": "bandgap-single",
+    "question": "请调用 predict_perovskite_bandgap 工具计算 MAPbIBr 在 Br_percentage 为 [0.5] 时的带隙。最终只返回 JSON 对象，格式 {\"results\":[{\"Br_percentage\":比例,\"bandgap\":数值,\"unit\":\"eV\"}]}。每个比例均需调用工具，保留至少三位小数。",
+    "required_tools": [
+      "predict_perovskite_bandgap"
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 0.5,
+        "bandgap": 1.64,
+        "unit": "eV"
+      }
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.5
+        },
+        "result": {
+          "bandgap": 1.64,
+          "unit": "eV",
+          "input_parameters": {
+            "Br_percentage": 0.5
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "bandgap-curve",
+    "question": "请调用 predict_perovskite_bandgap 工具计算 MAPbIBr 在 Br_percentage 为 [0, 0.5, 1] 时的带隙。使用 draw_curve 生成曲线，设置 save_file=true。最终只返回 JSON 对象，格式 {\"results\":[{\"Br_percentage\":比例,\"bandgap\":数值,\"unit\":\"eV\"}],\"chart_file\":\"工具返回的原样文件路径\"}。每个比例均需调用工具，保留至少三位小数。",
+    "required_tools": [
+      "predict_perovskite_bandgap",
+      "draw_curve"
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 0,
+        "bandgap": 1.565,
+        "unit": "eV"
+      },
+      {
+        "Br_percentage": 0.5,
+        "bandgap": 1.64,
+        "unit": "eV"
+      },
+      {
+        "Br_percentage": 1,
+        "bandgap": 1.715,
+        "unit": "eV"
+      }
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0
+        },
+        "result": {
+          "bandgap": 1.565,
+          "unit": "eV",
+          "input_parameters": {
+            "Br_percentage": 0
+          }
+        }
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.5
+        },
+        "result": {
+          "bandgap": 1.64,
+          "unit": "eV",
+          "input_parameters": {
+            "Br_percentage": 0.5
+          }
+        }
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 1
+        },
+        "result": {
+          "bandgap": 1.715,
+          "unit": "eV",
+          "input_parameters": {
+            "Br_percentage": 1
+          }
+        }
+      }
+    ],
+    "expected_curve": {
+      "x_data": [
+        0,
+        0.5,
+        1
+      ],
+      "y_data": [
+        1.565,
+        1.64,
+        1.715
+      ],
+      "save_file": true
+    }
+  }
+]

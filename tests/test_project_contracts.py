@@ -87,6 +87,10 @@ def test_configuration_template_is_complete() -> None:
     for variable in (
         "DEEPSEEK_API_KEY",
         "DEEPSEEK_BASE_URL",
+        "LLM_PROVIDER",
+        "LLM_API_KEY",
+        "LLM_BASE_URL",
+        "LLM_DEFAULT_MODEL",
         "MCP_SERVER_URL",
         "MODEL_DIR",
         "PSKNA_DIR",
@@ -95,6 +99,14 @@ def test_configuration_template_is_complete() -> None:
         "SOLAR_API_HOST",
         "SOLAR_API_PORT",
         "SOLAR_API_BASE_URL",
+        "RAG_CHUNK_CHARACTERS",
+        "RAG_CHUNK_OVERLAP",
+        "RAG_DENSE_WEIGHT",
+        "RAG_BACKEND",
+        "RAG_LEXICAL_MIN_SCORE",
+        "MCP_TOOL_TIMEOUT_SECONDS",
+        "MCP_TOOL_MAX_ATTEMPTS",
+        "MAX_TOOL_ROUNDS",
     ):
         assert f"{variable}=" in content
 

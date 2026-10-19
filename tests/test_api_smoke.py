@@ -21,6 +21,9 @@ def test_health_reports_capability_status() -> None:
     assert body["service"] == "SolarAI-X"
     assert isinstance(body["llm_configured"], bool)
     assert isinstance(body["mcp_connected"], bool)
+    assert body["llm"]["configured"] == body["llm_configured"]
+    assert body["rag"]["backend"] in {"semantic", "lexical"}
+    assert isinstance(body["rag"]["available"], bool)
     assert set(body["models"]) == {
         "solar",
         "perovskite_narrow",

@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 import os
+
+for _thread_variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_thread_variable, "1")
+
 import base64
 import io
-from typing import Dict, Any, List, Tuple, Optional, Literal
+from typing import Annotated, Dict, Any, List, Tuple, Optional, Literal
+from pydantic import Field
 
 import numpy as np
 import pandas as pd
@@ -26,9 +31,15 @@ from mcp.server import Server
 import uvicorn
 from dotenv import load_dotenv
 from embed import TextEmbedding  # 导入嵌入模块
+from retrieval_utils import context_excerpt
+from file_access import generated_output_directory
+from pathlib import Path
 # 导入钙钛矿预测相关模块
 from mlutil import predict_perovskite_params_ml
 from aging_utils import predict_aging_curve, get_default_aging_params
+from bandgap_utils import (
+    BandgapParameters, BandgapModelUnavailable, get_bandgap_status, predict_bandgap,
+)
 import torch
 import torch.nn as nn
 load_dotenv()
@@ -46,10 +57,24 @@ if not os.path.isabs(model_base_path):
 predictor = {}
 solar_model_error = None
 
+solar_model_issues = []
 if TabularPredictor is None:
-    solar_model_error = "未安装autogluon.tabular。"
-elif not os.path.exists(model_base_path):
-    solar_model_error = f"模型目录不存在：{model_base_path}"
+    solar_model_issues.append("未安装 autogluon.tabular")
+if not os.path.exists(model_base_path):
+    solar_model_issues.append(f"模型目录不存在：{model_base_path}")
+else:
+    missing_model_parameters = [
+        parameter
+        for parameter in ("Vm", "Im", "Voc", "Jsc", "FF", "Eff")
+        if not os.path.exists(os.path.join(model_base_path, parameter))
+    ]
+    if missing_model_parameters:
+        solar_model_issues.append(
+            "缺少模型子目录：" + ", ".join(missing_model_parameters)
+        )
+
+if solar_model_issues:
+    solar_model_error = "；".join(solar_model_issues) + "。"
 else:
     try:
         for param in ['Vm', 'Im', 'Voc', 'Jsc', 'FF', 'Eff']:
@@ -76,7 +101,11 @@ def load_text_embedding():
         if os.path.exists(embedding_dir):
             print(f"正在从 {embedding_dir} 加载嵌入向量...")
             text_embedding = TextEmbedding.load_with_file_info(embedding_dir)
-            print(f"嵌入向量加载完成，共 {len(text_embedding)} 个向量")
+            status = text_embedding.get_status()
+            print(
+                "知识库加载完成："
+                f"{status['document_count']} 个片段，后端={status['backend']}"
+            )
         else:
             print(f"嵌入向量目录 {embedding_dir} 不存在，跳过加载")
     except Exception as e:
@@ -127,7 +156,7 @@ async def draw_curve(
     - 如果save_file为True，还会返回图像文件路径
     """
     if ctx:
-        ctx.info("开始绘制曲线图...")
+        await ctx.info("开始绘制曲线图...")
     
     # 检查数据
     if len(x_data) != len(y_data):
@@ -152,26 +181,25 @@ async def draw_curve(
     file_path = None
     if save_file:
         # 确保输出目录存在
-        output_dir = os.getenv("OUTPUT_DIR", "plot_results")
-        os.makedirs(output_dir, exist_ok=True)
+        output_dir = generated_output_directory(Path(project_root), "plot_results", os.getenv("OUTPUT_DIR"))
         
         # 使用当前时间创建文件名，确保不会重复
         import datetime
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        file_path = os.path.join(output_dir, f"curve_{timestamp}.png")
+        file_path = os.path.join(output_dir, f"curve_{timestamp}.png").replace("\\", "/")
         
         # 保存图像
-        plt.savefig(file_path)
+        plt.savefig(os.path.join(project_root, file_path))
         
         if ctx:
-            ctx.info(f"曲线图已保存至: {file_path}")
+            await ctx.info(f"曲线图已保存至: {file_path}")
     
     # 转换图像为MCP Image对象
     curve_image = fig_to_image(fig)
     plt.close(fig)
     
     if ctx:
-        ctx.info("曲线图绘制完成!")
+        await ctx.info("曲线图绘制完成!")
     
     # 返回结果
     result = {
@@ -210,7 +238,7 @@ async def draw_table(
     - 如果save_file为True，还会返回图像文件路径
     """
     if ctx:
-        ctx.info("开始绘制数据表格...")
+        await ctx.info("开始绘制数据表格...")
     
     # 检查输入数据
     if not isinstance(table_data, list) or not all(isinstance(row, list) for row in table_data):
@@ -256,26 +284,25 @@ async def draw_table(
     file_path = None
     if save_file:
         # 确保输出目录存在
-        output_dir = os.getenv("OUTPUT_DIR", "plot_results")
-        os.makedirs(output_dir, exist_ok=True)
+        output_dir = generated_output_directory(Path(project_root), "plot_results", os.getenv("OUTPUT_DIR"))
         
         # 使用当前时间创建文件名，确保不会重复
         import datetime
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        file_path = os.path.join(output_dir, f"table_{timestamp}.png")
+        file_path = os.path.join(output_dir, f"table_{timestamp}.png").replace("\\", "/")
         
         # 保存图像
-        plt.savefig(file_path, bbox_inches='tight')
+        plt.savefig(os.path.join(project_root, file_path), bbox_inches='tight')
         
         if ctx:
-            ctx.info(f"表格已保存至: {file_path}")
+            await ctx.info(f"表格已保存至: {file_path}")
     
     # 转换图像为MCP Image对象
     table_image = fig_to_image(fig)
     plt.close(fig)
     
     if ctx:
-        ctx.info("数据表格绘制完成!")
+        await ctx.info("数据表格绘制完成!")
     
     # 返回结果
     result = {
@@ -320,7 +347,7 @@ async def simulate_solar_cell(
     注意：在仿真之前，如果用户没有确认，请你先输出一个确认信息，输出你即将仿真的参数，让用户确认是否要进行仿真。
     """
     if ctx:
-        ctx.info("开始太阳能电池仿真...")
+        await ctx.info("开始太阳能电池仿真...")
 
     if not predictor or TabularDataset is None:
         raise RuntimeError(
@@ -353,14 +380,14 @@ async def simulate_solar_cell(
     predictions = {}
     
     if ctx:
-        ctx.info("执行预测中...")
+        await ctx.info("执行预测中...")
     
     # 对每个参数进行预测
     for param in ['Vm', 'Im', 'Voc', 'Jsc', 'FF', 'Eff']:
         predictions[param] = float(predictor[param].predict(input_data).iloc[0])
     
     if ctx:
-        ctx.info("生成JV曲线...")
+        await ctx.info("生成JV曲线...")
     
     # 创建JV曲线
     fig = plt.figure(figsize=(10, 6))
@@ -397,25 +424,24 @@ async def simulate_solar_cell(
     import os
     
     # 确保输出目录存在
-    output_dir = os.getenv("OUTPUT_DIR", "simulation_results")
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir = generated_output_directory(Path(project_root), "simulation_results", os.getenv("OUTPUT_DIR"))
     
     # 使用当前时间创建文件名，确保不会重复
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    file_path = os.path.join(output_dir, f"jv_curve_{timestamp}.png")
+    file_path = os.path.join(output_dir, f"jv_curve_{timestamp}.png").replace("\\", "/")
     
     # 保存图像
-    plt.savefig(file_path)
+    plt.savefig(os.path.join(project_root, file_path))
     
     if ctx:
-        ctx.info(f"JV曲线已保存至: {file_path}")
+        await ctx.info(f"JV曲线已保存至: {file_path}")
     
     # 转换图像为MCP Image对象
     jv_curve_image = fig_to_image(fig)
     plt.close(fig)
     
     if ctx:
-        ctx.info("仿真完成!")
+        await ctx.info("仿真完成!")
     
     # 返回结果字典和JV曲线图像
     result = {
@@ -463,7 +489,7 @@ async def batch_simulate_solar_cell(
     注意：在仿真之前，如果用户没有确认，请你先输出一个确认信息，输出你即将仿真的参数，让用户确认是否要进行仿真。
     """
     if ctx:
-        ctx.info(f"开始批量仿真，参数: {param_name}")
+        await ctx.info(f"开始批量仿真，参数: {param_name}")
 
     if not predictor or TabularDataset is None:
         raise RuntimeError(
@@ -501,7 +527,7 @@ async def batch_simulate_solar_cell(
     param_values = np.arange(start_val, end_val + step_val/2, step_val)
     
     if ctx:
-        ctx.info(f"Will simulate {len(param_values)} values for {param_name}: {param_values}")
+        await ctx.info(f"Will simulate {len(param_values)} values for {param_name}: {param_values}")
     
     # 存储所有仿真结果
     all_results = []
@@ -514,7 +540,7 @@ async def batch_simulate_solar_cell(
     # 对每个参数值进行仿真
     for val in param_values:
         if ctx:
-            ctx.info(f"Simulating {param_name} = {val}")
+            await ctx.info(f"Simulating {param_name} = {val}")
         
         # 更新当前参数值
         base_params[param_name] = val
@@ -543,7 +569,7 @@ async def batch_simulate_solar_cell(
     results_df = pd.DataFrame(all_results)
     
     if ctx:
-        ctx.info("Generating performance trend charts...")
+        await ctx.info("Generating performance trend charts...")
     
     # 创建性能趋势图
     fig_trends = plt.figure(figsize=(12, 8))
@@ -566,20 +592,19 @@ async def batch_simulate_solar_cell(
     import os
     
     # 确保输出目录存在
-    output_dir = os.getenv("OUTPUT_DIR", "simulation_results")
-    os.makedirs(output_dir, exist_ok=True)
+    output_dir = generated_output_directory(Path(project_root), "simulation_results", os.getenv("OUTPUT_DIR"))
     
     # 使用当前时间创建文件名
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    trends_file = os.path.join(output_dir, f"trends_{param_name}_{timestamp}.png")
-    plt.savefig(trends_file)
+    trends_file = os.path.join(output_dir, f"trends_{param_name}_{timestamp}.png").replace("\\", "/")
+    plt.savefig(os.path.join(project_root, trends_file))
     
     # 转换为MCP Image对象
     trends_image = fig_to_image(fig_trends)
     plt.close(fig_trends)
     
     if ctx:
-        ctx.info("Generating combined JV curves...")
+        await ctx.info("Generating combined JV curves...")
     
     # 创建JV曲线叠加图 - 使用明确的轴对象
     fig_jv, ax = plt.subplots(figsize=(10, 6))
@@ -610,15 +635,15 @@ async def batch_simulate_solar_cell(
     plt.tight_layout()
     
     # 保存JV曲线叠加图
-    jv_file = os.path.join(output_dir, f"jv_curves_{param_name}_{timestamp}.png")
-    plt.savefig(jv_file)
+    jv_file = os.path.join(output_dir, f"jv_curves_{param_name}_{timestamp}.png").replace("\\", "/")
+    plt.savefig(os.path.join(project_root, jv_file))
     
     # 转换为MCP Image对象
     jv_curves_image = fig_to_image(fig_jv)
     plt.close(fig_jv)
     
     if ctx:
-        ctx.info("Batch simulation completed!")
+        await ctx.info("Batch simulation completed!")
     
     result = {
     }
@@ -704,9 +729,9 @@ def solar_simulation_help() -> str:
 
 @mcp.tool()
 async def search_embedded_text(
-    query: str,              # 查询文本
-    top_n: int = 5,          # 返回的相似文本数量
-    min_similarity: float = 0.5,  # 最小相似度阈值
+    query: Annotated[str, Field(min_length=1, max_length=2000)],
+    top_n: Annotated[int, Field(ge=1, le=20)] = 5,
+    min_similarity: Annotated[float, Field(ge=0, le=1)] = 0.5,
     ctx: Context = None
 ) -> Dict[str, Any]:
     """
@@ -727,15 +752,16 @@ async def search_embedded_text(
     context_info = []
     
     if ctx:
-        ctx.info(f"开始搜索与查询 '{query}' 相关的文本...")
+        await ctx.info(f"开始搜索与查询 '{query}' 相关的文本...")
     
     if text_embedding is None:
         if ctx:
-            ctx.warning("嵌入向量未加载，无法搜索上下文")
+            await ctx.warning("嵌入向量未加载，无法搜索上下文")
         return {
             "text": {
                 "error": "嵌入向量未加载，无法搜索上下文",
-                "results": []
+                "results": [],
+                "retrieval": {"available": False, "backend": None},
             }
         }
     
@@ -747,59 +773,18 @@ async def search_embedded_text(
         for text, similarity, file_name in similar_texts:
             context_info.append({
                 "file_name": file_name or "未知文件",
-                "content": text[:500] + "..." if len(text) > 500 else text,  # 限制内容长度
+                "content": context_excerpt(text, query),
+                "content_truncated": len(text) > 4000,
+                "source_chunk_characters": len(text),
                 "similarity": f"{similarity:.4f}"
             })
         
         if ctx:
-            ctx.info(f"为查询 '{query}' 找到 {len(context_info)} 个相关上下文")
+            await ctx.info(f"为查询 '{query}' 找到 {len(context_info)} 个相关上下文")
         
-        # 创建结果表格图
-        if context_info and len(context_info) > 0:
-            fig, ax = plt.subplots(figsize=(12, len(context_info) * 1.2 + 2))
-            ax.axis('tight')
-            ax.axis('off')
-            
-            table_data = []
-            for item in context_info:
-                # 截断内容以适应表格
-                content_preview = item["content"]
-                if len(content_preview) > 100:
-                    content_preview = content_preview[:97] + "..."
-                
-                table_data.append([
-                    item["file_name"],
-                    content_preview,
-                    item["similarity"]
-                ])
-            
-            table = ax.table(
-                cellText=table_data,
-                colLabels=["文件名", "内容预览", "相似度"],
-                loc='center',
-                cellLoc='left'
-            )
-            
-            # 调整表格样式
-            table.auto_set_font_size(False)
-            table.set_fontsize(9)
-            table.scale(1, 1.5)
-            
-            # 设置列宽
-            table.auto_set_column_width([0, 1, 2])
-            
-            plt.title(f"与查询 '{query}' 相关的文本")
-            plt.tight_layout()
-            
-            # 转换为MCP Image对象
-            results_image = fig_to_image(fig)
-            plt.close(fig)
-        else:
-            results_image = None
-    
     except Exception as e:
         if ctx:
-            ctx.error(f"搜索上下文时出错: {str(e)}")
+            await ctx.error(f"搜索上下文时出错: {str(e)}")
         import traceback
         traceback.print_exc()
         return {
@@ -811,9 +796,9 @@ async def search_embedded_text(
     
     return {
         "text": {
-            "results": context_info
-        },
-        "image": [results_image] if results_image else []
+            "results": context_info,
+            "retrieval": text_embedding.get_status(),
+        }
     }
 
 @mcp.tool()
@@ -842,7 +827,7 @@ async def process_directory_for_embedding(
     global text_embedding
     
     if ctx:
-        ctx.info(f"开始处理目录 {directory_path} 中的文本文件...")
+        await ctx.info(f"开始处理目录 {directory_path} 中的文本文件...")
     
     try:
         # 初始化TextEmbedding
@@ -858,7 +843,7 @@ async def process_directory_for_embedding(
         text_embedding.save_with_file_info(save_dir)
         
         if ctx:
-            ctx.info(f"嵌入向量生成完成，已保存到 {save_dir} 目录")
+            await ctx.info(f"嵌入向量生成完成，已保存到 {save_dir} 目录")
         
         return {
             "text": {
@@ -872,7 +857,7 @@ async def process_directory_for_embedding(
     except Exception as e:
         error_msg = f"处理文本文件时出错: {str(e)}"
         if ctx:
-            ctx.error(error_msg)
+            await ctx.error(error_msg)
         import traceback
         traceback.print_exc()
         
@@ -986,7 +971,7 @@ async def predict_perovskite_aging(
     - 时间-性能衰减关系
     """
     if ctx:
-        ctx.info("开始钙钛矿太阳能电池老化预测...")
+        await ctx.info("开始钙钛矿太阳能电池老化预测...")
     
     try:
         # 构建参数字典
@@ -1081,7 +1066,7 @@ async def predict_perovskite_aging(
         plt.close(fig)
         
         if ctx:
-            ctx.info(f"钙钛矿老化曲线预测完成，预测了 {len(x_coords)} 个时间点的性能衰减")
+            await ctx.info(f"钙钛矿老化曲线预测完成，预测了 {len(x_coords)} 个时间点的性能衰减")
         
         return {
             "text": {
@@ -1096,7 +1081,7 @@ async def predict_perovskite_aging(
     except Exception as e:
         error_msg = f"钙钛矿老化预测失败: {str(e)}"
         if ctx:
-            ctx.error(error_msg)
+            await ctx.error(error_msg)
         return {
             "text": {
                 "error": error_msg
@@ -1200,7 +1185,7 @@ async def predict_perovskite_parameters(
     - JV曲线图像
     """
     if ctx:
-        ctx.info(f"开始预测{perovskite_type}钙钛矿太阳能电池性能参数...")
+        await ctx.info(f"开始预测{perovskite_type}钙钛矿太阳能电池性能参数...")
     
     try:
         # 验证钙钛矿类型
@@ -1258,11 +1243,11 @@ async def predict_perovskite_parameters(
         plt.close(fig)
         
         if ctx:
-            ctx.info(f"{perovskite_type}钙钛矿太阳能电池性能参数预测完成")
-            ctx.info(f"预测效率: {predictions.get('Eff', 0):.2f}%")
-            ctx.info(f"开路电压: {predictions.get('Voc', 0):.2f}V")
-            ctx.info(f"短路电流: {predictions.get('Jsc', 0):.2f}mA/cm²")
-            ctx.info(f"填充因子: {predictions.get('FF', 0):.2f}")
+            await ctx.info(f"{perovskite_type}钙钛矿太阳能电池性能参数预测完成")
+            await ctx.info(f"预测效率: {predictions.get('Eff', 0):.2f}%")
+            await ctx.info(f"开路电压: {predictions.get('Voc', 0):.2f}V")
+            await ctx.info(f"短路电流: {predictions.get('Jsc', 0):.2f}mA/cm²")
+            await ctx.info(f"填充因子: {predictions.get('FF', 0):.2f}")
         
         return {
             "text": {
@@ -1276,7 +1261,7 @@ async def predict_perovskite_parameters(
     except Exception as e:
         error_msg = f"钙钛矿参数预测失败: {str(e)}"
         if ctx:
-            ctx.error(error_msg)
+            await ctx.error(error_msg)
         return {
             "text": {
                 "error": error_msg
@@ -1286,240 +1271,45 @@ async def predict_perovskite_parameters(
 @mcp.tool()
 async def predict_perovskite_bandgap(
     perovskite_type: Literal["MAPbIBr", "CsMAFAPbIBr", "MAFA", "CsFA"],
-    Br_percentage: Optional[float] = None,      # Br百分比 (0-1), 仅用于MAPbIBr
-    Cs_ratio: Optional[float] = None,           # Cs比例 (0-1), 用于CsMAFAPbIBr和CsFA
-    FA_ratio: Optional[float] = None,           # FA比例 (0-1), 用于CsMAFAPbIBr和MAFA
-    I_ratio: Optional[float] = None,            # I比例 (0-1), 用于多种类型
-    MA_ratio: Optional[float] = None,           # MA比例 (0-1), 用于MAFA
-    ctx: Context = None
+    Br_percentage: Optional[Annotated[float, Field(ge=0, le=1)]] = None,
+    Cs_ratio: Optional[Annotated[float, Field(ge=0, le=1)]] = None,
+    FA_ratio: Optional[Annotated[float, Field(ge=0, le=1)]] = None,
+    I_ratio: Optional[Annotated[float, Field(ge=0, le=1)]] = None,
+    MA_ratio: Optional[Annotated[float, Field(ge=0, le=1)]] = None,
+    method: Literal["formula", "measured_baseline"] = "formula",
+    ctx: Context = None,
 ) -> Dict[str, Any]:
+    """MAPbIBr 带隙线性公式演示，需要 Br_percentage (0..1)。
+
+    CsMAFAPbIBr、MAFA、CsFA 的历史多项式缺少训练和验证资料，当前不可用。
+    method=formula 为原公式，measured_baseline 为公开光谱测量训练的文献基线，仅开放测试样本足够且在训练邻近范围内的组分。未做新的材料实验。
     """
-    预测钙钛矿材料的带隙
-    
-    这个工具使用多项式回归模型预测不同组成的钙钛矿材料的带隙值。
-    支持四种钙钛矿类型，每种类型需要不同的输入参数。
-    
-    参数:
-    - perovskite_type: 钙钛矿类型，可选值：
-      * "MAPbIBr": 需要Br_percentage参数
-      * "CsMAFAPbIBr": 需要Cs_ratio, FA_ratio, I_ratio参数
-      * "MAFA": 需要MA_ratio, I_ratio参数
-      * "CsFA": 需要Cs_ratio, I_ratio参数
-    - Br_percentage: Br在总卤化物中的百分比 (0-1)
-    - Cs_ratio: Cs在总阳离子中的比例 (0-1)
-    - FA_ratio: FA在总阳离子中的比例 (0-1)
-    - I_ratio: I在总卤化物中的比例 (0-1)
-    - MA_ratio: MA在总阳离子中的比例 (0-1)
-    
-    返回:
-    - 预测的带隙值 (eV)
-    - 使用的模型信息和精度指标
-    - 相关的化学公式或计算方法
-    """
-    if ctx:
-        ctx.info(f"开始预测{perovskite_type}钙钛矿材料的带隙...")
-    
     try:
-        if perovskite_type == "MAPbIBr":
-            if Br_percentage is None:
-                raise ValueError("MAPbIBr类型需要提供Br_percentage参数")
-            
-            # 计算MAPbIBr的带隙
-            bandgap = 1.565 + 0.15 * Br_percentage
-            
-            if ctx:
-                ctx.info(f"MAPbIBr带隙预测完成，Br_percentage={Br_percentage:.3f}, 带隙={bandgap:.3f}eV")
-            
-            return {
-                "text": {
-                    "bandgap": bandgap,
-                    "unit": "eV",
-                    "formula": "1.565 + 0.15 * Br_percentage",
-                    "input_parameters": {"Br_percentage": Br_percentage},
-                    "perovskite_type": perovskite_type,
-                    "summary": f"{perovskite_type}钙钛矿的预测带隙为{bandgap:.3f} eV"
-                }
-            }
-            
-        elif perovskite_type == "CsMAFAPbIBr":
-            if any(p is None for p in [Cs_ratio, FA_ratio, I_ratio]):
-                raise ValueError("CsMAFAPbIBr类型需要提供Cs_ratio, FA_ratio和I_ratio参数")
-            
-            # CsMAFAPbIBr系数
-            coefficients = np.array([0.00000000e+00, 1.85103066e+01, -5.67081558e+00, 3.26564185e-01,
-                                    -8.29277827e+01, -9.20817024e+00, -6.70094406e+00, 2.85323968e+00,
-                                    4.00960394e+00, -1.94235432e-01, 3.23777507e+01, -2.17075962e+00,
-                                    2.43646256e+01, -1.61156004e+00, 4.36068310e+00, 2.40287403e-01,
-                                    -1.08276395e+00, -6.04079873e-01, -7.64009588e-01, 3.49371493e-02])
-            intercept = 1.4053637187538268
-            
-            # 制作特征向量
-            x = np.array([Cs_ratio, FA_ratio, I_ratio])
-            
-            # 多项式特征展开 (3次多项式)
-            poly_features = []
-            for i in range(4):  # 度数从0到3
-                if i == 0:
-                    poly_features.append(1)  # 常数项
-                else:
-                    for j in range(len(x)**i):
-                        indices = np.unravel_index(j, tuple([len(x)] * i))
-                        term = np.prod([x[idx] for idx in indices])
-                        poly_features.append(term)
-            
-            # 裁剪到对应系数长度
-            poly_features = np.array(poly_features[:len(coefficients)])
-            
-            # 预测带隙
-            bandgap = np.dot(coefficients, poly_features) + intercept
-            
-            if ctx:
-                ctx.info(f"CsMAFAPbIBr带隙预测完成，带隙={bandgap:.3f}eV")
-                ctx.info(f"输入参数: Cs_ratio={Cs_ratio:.3f}, FA_ratio={FA_ratio:.3f}, I_ratio={I_ratio:.3f}")
-            
-            return {
-                "text": {
-                    "bandgap": float(bandgap),
-                    "unit": "eV",
-                    "model_metrics": {
-                        "degree": 3,
-                        "standard_error": 0.03,
-                        "R2_1": 0.59,
-                        "R2_2": 0.36
-                    },
-                    "input_parameters": {
-                        "Cs_ratio": Cs_ratio,
-                        "FA_ratio": FA_ratio,
-                        "I_ratio": I_ratio
-                    },
-                    "perovskite_type": perovskite_type,
-                    "summary": f"{perovskite_type}钙钛矿的预测带隙为{bandgap:.3f} eV"
-                }
-            }
-            
-        elif perovskite_type == "MAFA":
-            if any(p is None for p in [MA_ratio, I_ratio]):
-                raise ValueError("MAFA类型需要提供MA_ratio和I_ratio参数")
-            
-            # MAFA系数
-            coefficients = np.array([6.67041914e-09, 1.80035243e+02, -4.12649518e+01, 5.81805141e+01,
-                                    1.50772432e+02, -1.51313184e+01, 7.31982621e+01, -1.45092632e+01,
-                                    3.48092947e+01, 9.27160558e+01, 4.33999570e+01, 6.27801418e+01,
-                                    -1.47514433e+02, -1.06362220e+02, -4.30021694e+01, -1.54381644e+01,
-                                    4.98614404e+01, -5.15784751e+01, 5.32769966e+01, 2.36684346e+01,
-                                    5.60752291e+00])
-            intercept = -121.17914592495342
-            
-            # 制作特征向量
-            x = np.array([MA_ratio, I_ratio])
-            
-            # 多项式特征展开 (5次多项式)
-            poly_features = []
-            for i in range(6):  # 度数从0到5
-                if i == 0:
-                    poly_features.append(1)  # 常数项
-                else:
-                    for j in range(len(x)**i):
-                        indices = np.unravel_index(j, tuple([len(x)] * i))
-                        term = np.prod([x[idx] for idx in indices])
-                        poly_features.append(term)
-            
-            # 裁剪到对应系数长度
-            poly_features = np.array(poly_features[:len(coefficients)])
-            
-            # 预测带隙
-            bandgap = np.dot(coefficients, poly_features) + intercept
-            
-            if ctx:
-                ctx.info(f"MAFA带隙预测完成，带隙={bandgap:.3f}eV")
-                ctx.info(f"输入参数: MA_ratio={MA_ratio:.3f}, I_ratio={I_ratio:.3f}")
-            
-            return {
-                "text": {
-                    "bandgap": float(bandgap),
-                    "unit": "eV",
-                    "model_metrics": {
-                        "degree": 5,
-                        "standard_error": 0.03,
-                        "R2_1": 0.76,
-                        "R2_2": 0.51
-                    },
-                    "input_parameters": {
-                        "MA_ratio": MA_ratio,
-                        "I_ratio": I_ratio
-                    },
-                    "perovskite_type": perovskite_type,
-                    "summary": f"{perovskite_type}钙钛矿的预测带隙为{bandgap:.3f} eV"
-                }
-            }
-            
-        elif perovskite_type == "CsFA":
-            if any(p is None for p in [Cs_ratio, I_ratio]):
-                raise ValueError("CsFA类型需要提供Cs_ratio和I_ratio参数")
-            
-            # CsFA系数
-            coefficients = np.array([0.00000000e+00, 1.28022233e+04, 1.45111610e+03, -7.40110126e+03,
-                                    -2.07915040e+04, -4.24724412e+02, -5.40241551e+03, 1.11307802e+04,
-                                    1.23925881e+04, -1.40613786e+02, -2.75876681e+02, 4.50375583e+03,
-                                    -5.35781276e+03, -3.21086901e+03, 9.14203208e+01, 1.01612857e+02,
-                                    1.03191599e+02, -9.50461745e+02, 8.37296821e+02, 3.04467837e+02,
-                                    -1.23098003e+01])
-            intercept = -1143.8520505192823
-            
-            # 制作特征向量
-            x = np.array([Cs_ratio, I_ratio])
-            
-            # 多项式特征展开 (5次多项式)
-            poly_features = []
-            for i in range(6):  # 度数从0到5
-                if i == 0:
-                    poly_features.append(1)  # 常数项
-                else:
-                    for j in range(len(x)**i):
-                        indices = np.unravel_index(j, tuple([len(x)] * i))
-                        term = np.prod([x[idx] for idx in indices])
-                        poly_features.append(term)
-            
-            # 裁剪到对应系数长度
-            poly_features = np.array(poly_features[:len(coefficients)])
-            
-            # 预测带隙
-            bandgap = np.dot(coefficients, poly_features) + intercept
-            
-            if ctx:
-                ctx.info(f"CsFA带隙预测完成，带隙={bandgap:.3f}eV")
-                ctx.info(f"输入参数: Cs_ratio={Cs_ratio:.3f}, I_ratio={I_ratio:.3f}")
-            
-            return {
-                "text": {
-                    "bandgap": float(bandgap),
-                    "unit": "eV",
-                    "model_metrics": {
-                        "degree": 5,
-                        "standard_error": 0.04,
-                        "R2_1": 0.73,
-                        "R2_2": 0.48
-                    },
-                    "input_parameters": {
-                        "Cs_ratio": Cs_ratio,
-                        "I_ratio": I_ratio
-                    },
-                    "perovskite_type": perovskite_type,
-                    "summary": f"{perovskite_type}钙钛矿的预测带隙为{bandgap:.3f} eV"
-                }
-            }
-        else:
-            raise ValueError("不支持的钙钛矿类型")
-            
-    except Exception as e:
-        error_msg = f"钙钛矿带隙预测失败: {str(e)}"
-        if ctx:
-            ctx.error(error_msg)
-        return {
-            "text": {
-                "error": error_msg
-            }
-        }
+        params = BandgapParameters(
+            perovskite_type=perovskite_type,
+            Br_percentage=Br_percentage,
+            Cs_ratio=Cs_ratio,
+            FA_ratio=FA_ratio,
+            I_ratio=I_ratio,
+            MA_ratio=MA_ratio,
+            method=method,
+        )
+        result = predict_bandgap(params)
+        result["summary"] = f"带隙计算值为 {result['bandgap']:.3f} eV。" + result["limitation"]
+        return {"text": result}
+    except BandgapModelUnavailable as error:
+        return {"text": {
+            "error": str(error),
+            "code": "bandgap_model_unavailable",
+            "model_status": get_bandgap_status().get(perovskite_type),
+        }}
+    except ValueError:
+        # Invalid values may include user content; do not echo it in tool logs.
+        return {"text": {
+            "error": "带隙输入无效：请检查类型、必填参数、有限数值与组分比例。",
+            "code": "invalid_bandgap_input",
+        }}
+
 
 def create_starlette_app(mcp_server: Server, *, debug: bool = False) -> Starlette:
     """创建一个Starlette应用，使用SSE为MCP服务器提供服务"""

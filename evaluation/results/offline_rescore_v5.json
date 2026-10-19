@@ -1,0 +1,183 @@
+{
+  "all12_rescored_from_persisted_tool_events": true,
+  "new_model_calls": 0,
+  "results": [
+    {
+      "id": "bandgap-single",
+      "task_id": "1586a61842504746a3cb46a0c983da80",
+      "score": {
+        "required_tools_completed": true,
+        "expected_arguments_completed": true,
+        "tool_outputs_match_parameters": true,
+        "structured_answer_matches": true,
+        "curve_points_match": true,
+        "chart_artifact_verified": true,
+        "chart_artifact_error": null,
+        "passed": true,
+        "completed_tools": [
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "bandgap-curve",
+      "task_id": "db7d2261fb4b4c58a2fab5c742d85152",
+      "score": {
+        "required_tools_completed": true,
+        "expected_arguments_completed": true,
+        "tool_outputs_match_parameters": true,
+        "structured_answer_matches": true,
+        "curve_points_match": true,
+        "chart_artifact_verified": true,
+        "chart_artifact_error": null,
+        "passed": true,
+        "completed_tools": [
+          "draw_curve",
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "formula-lower-bound",
+      "task_id": "712ab0f3d5214cd9ae399b0ff7a533e0",
+      "score": {
+        "required_tools_completed": true,
+        "expected_arguments_completed": true,
+        "tool_outputs_match_parameters": true,
+        "structured_answer_matches": true,
+        "curve_points_match": true,
+        "chart_artifact_verified": true,
+        "chart_artifact_error": null,
+        "passed": true,
+        "completed_tools": [
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "formula-upper-bound",
+      "task_id": "770742d27f5d40d9b2545f8c7cd2849f",
+      "score": {
+        "required_tools_completed": true,
+        "expected_arguments_completed": true,
+        "tool_outputs_match_parameters": true,
+        "structured_answer_matches": true,
+        "curve_points_match": true,
+        "chart_artifact_verified": true,
+        "chart_artifact_error": null,
+        "passed": true,
+        "completed_tools": [
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "formula-two-values",
+      "task_id": "d9102a4264d141df82295be3a0b47f1b",
+      "score": {
+        "required_tools_completed": true,
+        "expected_arguments_completed": true,
+        "tool_outputs_match_parameters": true,
+        "structured_answer_matches": true,
+        "curve_points_match": true,
+        "chart_artifact_verified": true,
+        "chart_artifact_error": null,
+        "passed": true,
+        "completed_tools": [
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "measured-baseline-zero",
+      "task_id": "f02f70a67f7642b69e4a5df78d1856e8",
+      "score": {
+        "required_tools_completed": true,
+        "expected_arguments_completed": true,
+        "tool_outputs_match_parameters": true,
+        "structured_answer_matches": true,
+        "curve_points_match": true,
+        "chart_artifact_verified": true,
+        "chart_artifact_error": null,
+        "passed": true,
+        "completed_tools": [
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "measured-baseline-low-br",
+      "task_id": "8323a0a305fe429587e9556eb65beae7",
+      "score": {
+        "required_tools_completed": true,
+        "expected_arguments_completed": true,
+        "tool_outputs_match_parameters": true,
+        "structured_answer_matches": true,
+        "curve_points_match": true,
+        "chart_artifact_verified": true,
+        "chart_artifact_error": null,
+        "passed": true,
+        "completed_tools": [
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "formula-vs-measured",
+      "task_id": "8eca16e9d81741619e768529dbb2bd7f",
+      "score": {
+        "required_tools_completed": true,
+        "expected_arguments_completed": true,
+        "tool_outputs_match_parameters": true,
+        "structured_answer_matches": true,
+        "curve_points_match": true,
+        "chart_artifact_verified": true,
+        "chart_artifact_error": null,
+        "passed": true,
+        "completed_tools": [
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "invalid-ratio",
+      "task_id": "8f4d10066cd84a58a8609e34c99473b7",
+      "score": {
+        "passed": true,
+        "structured_refusal_matches": true,
+        "no_science_result_fabricated": true,
+        "required_tool_failure_observed": true
+      }
+    },
+    {
+      "id": "legacy-unavailable",
+      "task_id": "35823fb65c1b4ceca6f8180bcaa68b7c",
+      "score": {
+        "passed": true,
+        "structured_refusal_matches": true,
+        "no_science_result_fabricated": true,
+        "required_tool_failure_observed": true
+      }
+    },
+    {
+      "id": "low-support-unavailable",
+      "task_id": "486b16b12c754c728400c41fa7ee01ef",
+      "score": {
+        "passed": true,
+        "structured_refusal_matches": true,
+        "no_science_result_fabricated": true,
+        "required_tool_failure_observed": true
+      }
+    },
+    {
+      "id": "unknown-real-experiment",
+      "task_id": "5e2228d74c044dfbbaac1941a074fcfd",
+      "score": {
+        "passed": true,
+        "structured_refusal_matches": true,
+        "no_science_result_fabricated": true,
+        "required_tool_failure_observed": true
+      }
+    }
+  ]
+}

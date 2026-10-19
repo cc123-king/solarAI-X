@@ -1,0 +1,14 @@
+.git
+.venv
+.env
+**/.env
+**/__pycache__
+**/.pytest*
+**/.ruff_cache
+**/*.log
+**/*.sqlite3*
+data
+outputs
+work
+plot_results
+simulation_results

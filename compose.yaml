@@ -1,0 +1,42 @@
+services:
+  mcp:
+    build: .
+    command: ["python", "api/mcpserver.py", "--host", "0.0.0.0", "--port", "12346"]
+    env_file: .env
+    volumes: ["plots:/app/plot_results", "simulations:/app/simulation_results"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1',12346), timeout=5).close()"]
+      interval: 10s
+      timeout: 6s
+      retries: 10
+  api:
+    build: .
+    env_file: .env
+    environment:
+      MCP_SERVER_URL: http://mcp:12346/sse
+      SOLAR_STATE_DB: /app/data/state.sqlite3
+    ports: ["127.0.0.1:8001:8001"]
+    depends_on:
+      mcp:
+        condition: service_healthy
+    volumes: ["solar-data:/app/data", "plots:/app/plot_results", "simulations:/app/simulation_results"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/api/health', timeout=5)"]
+      interval: 15s
+      timeout: 6s
+      retries: 5
+  ui:
+    build: .
+    command: ["python", "web/app.py"]
+    env_file: .env
+    environment:
+      SOLAR_API_BASE_URL: http://api:8001/api
+      SOLAR_UI_HOST: 0.0.0.0
+    ports: ["127.0.0.1:5173:5173"]
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  solar-data:
+  plots:
+  simulations:

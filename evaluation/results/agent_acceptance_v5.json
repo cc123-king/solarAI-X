@@ -1,0 +1,254 @@
+{
+  "scope": {
+    "kind": "solar-expanded-agent-v5",
+    "mcp_url": "http://127.0.0.1:12346/sse",
+    "dataset_sha256": "7f02561038397f3b1dab484ef3c79fcc6a400b8b97f2f86b14d6f3f198d50def",
+    "case_count": 12,
+    "positive_cases": 8,
+    "negative_cases": 4,
+    "provider_host": "dashscope.aliyuncs.com",
+    "model": "qwen-plus",
+    "maximum_chat_requests": 48,
+    "maximum_tool_calls_per_case": 8,
+    "maximum_tool_rounds_per_case": 3,
+    "maximum_output_tokens_per_request": 768,
+    "sdk_automatic_retries": 0,
+    "allowed_tools": [
+      "draw_curve",
+      "predict_perovskite_bandgap"
+    ],
+    "inputs": "Only the fixed questions, tool catalog, computed formula/baseline outputs and chart artifact paths. No personal resume or existing runtime database.",
+    "source_sha256": {
+      "api/aging_utils.py": "e703476bb4f4cee407d40866549070cdde73d04be77801a3270a3de5096ecd57",
+      "api/async_stream.py": "962738dade61a88e6a76879f8cf1dbadecc7c867203a3400eccd86bed897f8ca",
+      "api/bandgap_baseline.py": "42f2ad127dd5afd17989e78de2ff97e146365a7fba38cd334c5bbb09b1909706",
+      "api/bandgap_utils.py": "7d87b4d514f9fb3f208af01e26f44964f469e03614cbff94af2271348cb4202b",
+      "api/capabilities.py": "421e96156b0eaa689e49a3c6beb62cbc8df1e5818d3a624b12eeddcf1893137e",
+      "api/demo_support.py": "44ca71db69f07f21fe3699b1379d69d5903df0dad11e0d5a961ccd930a46ea06",
+      "api/embed.py": "eb78fc4df4b1fcc745332b04a4a7f38a5865d9568e9ff8af57a9fcbf412539bc",
+      "api/embed_directory_example.py": "bea6afc8cd079643bc9ddb198cb5618033aa85561a230b558f544b3a68c3acce",
+      "api/file_access.py": "d4c20411a758c9dcad3f795b64c3c8b6a205c20410898800c3c3825e08ac7f5f",
+      "api/main.py": "654cf1b5e3aa80a02d84d04c595ed174ecb66ce7568191db8a354b56bd25c51e",
+      "api/mcpserver.py": "f5a0b23f6dea4653331ce9ef03069d4ae33c9fcf7bfe26dbc767879dfadfbf85",
+      "api/mlutil.py": "4a9f9339b53573d884425a082fb746b46ae036042a04508a4fda9aa834840457",
+      "api/rag_evaluation.py": "b5c94109b3d23c73845808e76b6155332bb1d5a775982ce223c539907b1c00a2",
+      "api/retrieval_utils.py": "bac069842ce26e182a0c49bf26db672b294cafdb8eb1ec4167ac90a5cf3bc102",
+      "api/task_store.py": "63fa73a34f6bb718baecefaa18cf0650f72ea3b38827bef204d688aaae453212",
+      "api/tool_runtime.py": "e767f7eb96ad7bc0200121641bae6ff714e946b51ecdf92948daf82f5fe2ff06",
+      "scripts/evaluate_agent_live.py": "5f575526372fc4a3d1aaef6a86b73f6947353bb7e27e1ab9da2c2bf58ed551a3",
+      "scripts/evaluate_agent_suite.py": "d002a25bb46db9c4c4070b5cb1b0946cb431fcfa56442c5cda70a8e0f6ad4469",
+      "models/bandgap/model.json": "a0553644445691fd51337f563adc670a0491aca8cb4c18141cb89eefc00038e7"
+    }
+  },
+  "chat_requests": 23,
+  "results": [
+    {
+      "id": "bandgap-single",
+      "task_id": "1586a61842504746a3cb46a0c983da80",
+      "first_content_ms": 2618.94429998938,
+      "elapsed_ms": 3123.501399997622,
+      "status": "completed",
+      "required_tools_completed": true,
+      "expected_arguments_completed": true,
+      "tool_outputs_match_parameters": true,
+      "structured_answer_matches": true,
+      "curve_points_match": true,
+      "chart_artifact_verified": true,
+      "chart_artifact_error": null,
+      "passed": true,
+      "completed_tools": [
+        "predict_perovskite_bandgap"
+      ],
+      "answer": "{\"results\":[{\"Br_percentage\":0.5,\"bandgap\":1.64,\"unit\":\"eV\"}]}",
+      "kind": "positive"
+    },
+    {
+      "id": "bandgap-curve",
+      "task_id": "db7d2261fb4b4c58a2fab5c742d85152",
+      "first_content_ms": 6945.952799986117,
+      "elapsed_ms": 9048.372099990956,
+      "status": "completed",
+      "required_tools_completed": true,
+      "expected_arguments_completed": true,
+      "tool_outputs_match_parameters": true,
+      "structured_answer_matches": true,
+      "curve_points_match": true,
+      "chart_artifact_verified": true,
+      "chart_artifact_error": null,
+      "passed": true,
+      "completed_tools": [
+        "draw_curve",
+        "predict_perovskite_bandgap"
+      ],
+      "answer": "{\"results\":[{\"Br_percentage\":0,\"bandgap\":1.565,\"unit\":\"eV\"},{\"Br_percentage\":0.5,\"bandgap\":1.64,\"unit\":\"eV\"},{\"Br_percentage\":1,\"bandgap\":1.715,\"unit\":\"eV\"}],\"chart_file\":\"plot_results/curve_20261019_110911_943207.png\"}",
+      "kind": "positive"
+    },
+    {
+      "id": "formula-lower-bound",
+      "task_id": "712ab0f3d5214cd9ae399b0ff7a533e0",
+      "first_content_ms": 2001.824599923566,
+      "elapsed_ms": 2574.1960000013933,
+      "status": "completed",
+      "required_tools_completed": true,
+      "expected_arguments_completed": true,
+      "tool_outputs_match_parameters": true,
+      "structured_answer_matches": true,
+      "curve_points_match": true,
+      "chart_artifact_verified": true,
+      "chart_artifact_error": null,
+      "passed": true,
+      "completed_tools": [
+        "predict_perovskite_bandgap"
+      ],
+      "answer": "{\"results\":[{\"Br_percentage\":0.0,\"bandgap\":1.565,\"unit\":\"eV\"}]}",
+      "kind": "positive"
+    },
+    {
+      "id": "formula-upper-bound",
+      "task_id": "770742d27f5d40d9b2545f8c7cd2849f",
+      "first_content_ms": 1894.9358999961987,
+      "elapsed_ms": 2867.05380002968,
+      "status": "completed",
+      "required_tools_completed": true,
+      "expected_arguments_completed": true,
+      "tool_outputs_match_parameters": true,
+      "structured_answer_matches": true,
+      "curve_points_match": true,
+      "chart_artifact_verified": true,
+      "chart_artifact_error": null,
+      "passed": true,
+      "completed_tools": [
+        "predict_perovskite_bandgap"
+      ],
+      "answer": "{\"results\": [{\"Br_percentage\": 1.0, \"bandgap\": 1.7149999999999999, \"unit\": \"eV\"}]}",
+      "kind": "positive"
+    },
+    {
+      "id": "formula-two-values",
+      "task_id": "d9102a4264d141df82295be3a0b47f1b",
+      "first_content_ms": 2979.1653000283986,
+      "elapsed_ms": 4079.767599934712,
+      "status": "completed",
+      "required_tools_completed": true,
+      "expected_arguments_completed": true,
+      "tool_outputs_match_parameters": true,
+      "structured_answer_matches": true,
+      "curve_points_match": true,
+      "chart_artifact_verified": true,
+      "chart_artifact_error": null,
+      "passed": true,
+      "completed_tools": [
+        "predict_perovskite_bandgap"
+      ],
+      "answer": "{\"results\":[{\"Br_percentage\":0.25,\"bandgap\":1.6025,\"unit\":\"eV\"},{\"Br_percentage\":0.75,\"bandgap\":1.6775,\"unit\":\"eV\"}]}",
+      "kind": "positive"
+    },
+    {
+      "id": "measured-baseline-zero",
+      "task_id": "f02f70a67f7642b69e4a5df78d1856e8",
+      "first_content_ms": 2062.534900032915,
+      "elapsed_ms": 3036.6531000472605,
+      "status": "completed",
+      "required_tools_completed": true,
+      "expected_arguments_completed": true,
+      "tool_outputs_match_parameters": true,
+      "structured_answer_matches": true,
+      "curve_points_match": true,
+      "chart_artifact_verified": true,
+      "chart_artifact_error": null,
+      "passed": true,
+      "completed_tools": [
+        "predict_perovskite_bandgap"
+      ],
+      "answer": "{\"results\": [{\"Br_percentage\": 0.0, \"bandgap\": 1.5907482235401573, \"unit\": \"eV\"}]}",
+      "kind": "positive"
+    },
+    {
+      "id": "measured-baseline-low-br",
+      "task_id": "8323a0a305fe429587e9556eb65beae7",
+      "first_content_ms": 2316.4922998985276,
+      "elapsed_ms": 3171.002999995835,
+      "status": "completed",
+      "required_tools_completed": true,
+      "expected_arguments_completed": true,
+      "tool_outputs_match_parameters": true,
+      "structured_answer_matches": true,
+      "curve_points_match": true,
+      "chart_artifact_verified": true,
+      "chart_artifact_error": null,
+      "passed": true,
+      "completed_tools": [
+        "predict_perovskite_bandgap"
+      ],
+      "answer": "{\"results\":[{\"Br_percentage\":0.05,\"bandgap\":1.615899532364914,\"unit\":\"eV\"}]}",
+      "kind": "positive"
+    },
+    {
+      "id": "formula-vs-measured",
+      "task_id": "8eca16e9d81741619e768529dbb2bd7f",
+      "first_content_ms": 3097.939100000076,
+      "elapsed_ms": 5209.640800021589,
+      "status": "completed",
+      "required_tools_completed": true,
+      "expected_arguments_completed": true,
+      "tool_outputs_match_parameters": true,
+      "structured_answer_matches": true,
+      "curve_points_match": true,
+      "chart_artifact_verified": true,
+      "chart_artifact_error": null,
+      "passed": true,
+      "completed_tools": [
+        "predict_perovskite_bandgap"
+      ],
+      "answer": "{\n  \"results\": [\n    {\n      \"method\": \"formula\",\n      \"Br_percentage\": 0,\n      \"bandgap\": 1.565000,\n      \"unit\": \"eV\"\n    },\n    {\n      \"method\": \"measured_baseline\",\n      \"Br_percentage\": 0,\n      \"bandgap\": 1.590748,\n      \"unit\": \"eV\"\n    }\n  ]\n}",
+      "kind": "positive"
+    },
+    {
+      "id": "invalid-ratio",
+      "status": "completed",
+      "elapsed_ms": 657.1407000301406,
+      "answer": "{\"status\":\"invalid_input\",\"bandgap\":null}",
+      "passed": true,
+      "structured_refusal_matches": true,
+      "no_science_result_fabricated": true,
+      "required_tool_failure_observed": true,
+      "kind": "negative"
+    },
+    {
+      "id": "legacy-unavailable",
+      "status": "completed",
+      "elapsed_ms": 2342.3682999564335,
+      "answer": "{\"status\":\"unavailable\",\"bandgap\":null}",
+      "passed": true,
+      "structured_refusal_matches": true,
+      "no_science_result_fabricated": true,
+      "required_tool_failure_observed": true,
+      "kind": "negative"
+    },
+    {
+      "id": "low-support-unavailable",
+      "status": "completed",
+      "elapsed_ms": 2186.510899919085,
+      "answer": "{\"status\":\"unavailable\",\"bandgap\":null}",
+      "passed": true,
+      "structured_refusal_matches": true,
+      "no_science_result_fabricated": true,
+      "required_tool_failure_observed": true,
+      "kind": "negative"
+    },
+    {
+      "id": "unknown-real-experiment",
+      "status": "completed",
+      "elapsed_ms": 547.8336999658495,
+      "answer": "{\"status\":\"unsupported\",\"bandgap\":null}",
+      "passed": true,
+      "structured_refusal_matches": true,
+      "no_science_result_fabricated": true,
+      "required_tool_failure_observed": true,
+      "kind": "negative"
+    }
+  ],
+  "passed": 12,
+  "not_general_agent_accuracy": true,
+  "independent_scientific_validation": false
+}

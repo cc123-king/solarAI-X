@@ -1,0 +1,140 @@
+{
+  "source": {
+    "doi": "10.5281/zenodo.5837035",
+    "sha256": "e722ded60e6162a47b00746c6215498dcf0ce9dd004703fd01ab560dfc213ba2",
+    "license": "CC-BY-4.0",
+    "rows": 42443
+  },
+  "measured_source_rows": 697,
+  "deduplicated_doi_compositions": 149,
+  "distinct_dois": 133,
+  "distinct_compositions": 36,
+  "family_counts": {
+    "MAPbIBr": 87,
+    "other_boundary": 27,
+    "CsMAFAPbIBr": 15,
+    "CsFA": 10,
+    "MAFA": 10
+  },
+  "candidate_validation": [
+    {
+      "spec": {
+        "degree": 1,
+        "alpha": 0.01
+      },
+      "validation": {
+        "mae_eV": 0.02432043282819505,
+        "rmse_eV": 0.037004773892518786,
+        "r2": 0.9554368756296698,
+        "count": 27
+      }
+    },
+    {
+      "spec": {
+        "degree": 2,
+        "alpha": 1.0
+      },
+      "validation": {
+        "mae_eV": 0.02119184508631339,
+        "rmse_eV": 0.02969876176150369,
+        "r2": 0.9712963710472113,
+        "count": 27
+      }
+    }
+  ],
+  "selected": {
+    "degree": 2,
+    "alpha": 1.0
+  },
+  "publication_holdout": {
+    "mae_eV": 0.027029858226327166,
+    "rmse_eV": 0.04656870346447754,
+    "r2": 0.922314392511735,
+    "count": 30
+  },
+  "publication_mean_baseline": {
+    "mae_eV": 0.10636526610644245,
+    "rmse_eV": 0.1671304237439374,
+    "r2": -0.00060645740339349,
+    "count": 30
+  },
+  "composition_holdout": {
+    "mae_eV": 0.03660680209764248,
+    "rmse_eV": 0.048297746223306244,
+    "r2": 0.6073643744596797,
+    "count": 14
+  },
+  "composition_candidate_validation": [
+    {
+      "spec": {
+        "degree": 1,
+        "alpha": 0.01
+      },
+      "validation": {
+        "mae_eV": 0.03032782968343101,
+        "rmse_eV": 0.05771000258662896,
+        "r2": 0.9210330120440634,
+        "count": 13
+      }
+    },
+    {
+      "spec": {
+        "degree": 2,
+        "alpha": 1.0
+      },
+      "validation": {
+        "mae_eV": 0.03280160113625675,
+        "rmse_eV": 0.05788546681403184,
+        "r2": 0.9205520921012618,
+        "count": 13
+      }
+    }
+  ],
+  "composition_selected": {
+    "degree": 1,
+    "alpha": 0.01
+  },
+  "composition_holdout_used_for_selection": false,
+  "test_dois": 27,
+  "split_counts": {
+    "train": 92,
+    "validation": 27,
+    "test": 30
+  },
+  "test_family_metrics": {
+    "CsFA": {
+      "mae_eV": 0.06676357522641078,
+      "rmse_eV": 0.11038801467288226,
+      "r2": -1.6362890396823162,
+      "count": 3
+    },
+    "CsMAFAPbIBr": {
+      "mae_eV": 0.018139649534160435,
+      "rmse_eV": 0.018167000133081094,
+      "r2": -2.712948805647971,
+      "count": 3
+    },
+    "MAFA": {
+      "mae_eV": 0.07391505868906223,
+      "rmse_eV": 0.07391505868906223,
+      "r2": null,
+      "count": 1
+    },
+    "MAPbIBr": {
+      "mae_eV": 0.017904627962820486,
+      "rmse_eV": 0.02317911065323998,
+      "r2": 0.9802220823497599,
+      "count": 17
+    },
+    "other_boundary": {
+      "mae_eV": 0.02964872307518181,
+      "rmse_eV": 0.04639615184585325,
+      "r2": 0.9485194282736166,
+      "count": 6
+    }
+  },
+  "test_used_for_model_selection": false,
+  "training_script_sha256": "43ed5108e1f86e25737020520067cf19531a0d381f2971ad7457b537f6c284af",
+  "limits": "Literature optical-gap baseline; no new physical experiments, phase/process effects omitted. Grouped holdouts reduce specified leakage but do not prove out-of-distribution scientific accuracy.",
+  "quality_gates_passed": true
+}

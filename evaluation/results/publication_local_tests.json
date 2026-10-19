@@ -1,0 +1,10 @@
+{
+  "environment": "Windows / Python 3.12, separate dependency environment",
+  "tests": 156,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "scope": "Final publication snapshot without .env. Linux CI is separate.",
+  "new_paid_model_requests": 0,
+  "command": "python -m pytest -q"
+}

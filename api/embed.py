@@ -4,6 +4,7 @@ import pickle
 from typing import List, Dict, Tuple, Optional, Union, Any
 import glob
 from tqdm import tqdm
+from retrieval_utils import LexicalIndex, chunk_text, hybrid_rerank
 
 try:
     from FlagEmbedding import FlagAutoModel
@@ -30,17 +31,41 @@ class TextEmbedding:
             query_instruction: 检索指令
             use_fp16: 是否使用fp16精度
         """
-        if FlagAutoModel is None:
-            raise RuntimeError(
-                "缺少FlagEmbedding，知识库生成和检索功能暂不可用。"
-            )
+        requested_backend = os.getenv("RAG_BACKEND", "auto").strip().lower()
+        if requested_backend not in {"auto", "semantic", "lexical"}:
+            raise ValueError("RAG_BACKEND 必须是 auto、semantic 或 lexical")
 
-        self.model = FlagAutoModel.from_finetuned(model_name,
-                                                 query_instruction_for_retrieval=query_instruction,
-                                                 use_fp16=use_fp16)
-        self.text_embeddings: Dict[str, np.ndarray] = {}
+        self.model = None
+        self.backend = "lexical"
+        self.degraded_reason: str | None = None
+        if requested_backend != "lexical":
+            if FlagAutoModel is None:
+                if requested_backend == "semantic":
+                    raise RuntimeError(
+                        "RAG_BACKEND=semantic，但未安装 FlagEmbedding。"
+                    )
+                self.degraded_reason = (
+                    "未安装 FlagEmbedding，已自动切换为本地关键词检索。"
+                )
+            else:
+                try:
+                    self.model = FlagAutoModel.from_finetuned(
+                        model_name,
+                        query_instruction_for_retrieval=query_instruction,
+                        use_fp16=use_fp16,
+                    )
+                    self.backend = "semantic"
+                except Exception as error:
+                    if requested_backend == "semantic":
+                        raise
+                    self.degraded_reason = (
+                        f"语义模型加载失败，已切换为关键词检索：{error}"
+                    )
+
+        self.text_embeddings: Dict[str, np.ndarray | None] = {}
         # 添加文件信息存储
         self.file_info: Dict[str, str] = {}  # 文本 -> 文件名映射
+        self._lexical_index: LexicalIndex | None = None
         
     def add_texts(self, texts: List[str], truncate_length: Optional[int] = None, file_names: Optional[List[str]] = None) -> None:
         """
@@ -51,42 +76,41 @@ class TextEmbedding:
             truncate_length: 截断长度，如果为None则不截断
             file_names: 对应的文件名列表，如果提供，则会存储文本与文件名的对应关系
         """
-        if truncate_length is None:
-            # 不截断，直接计算embedding
-            print("计算文本嵌入...")
-            embeddings = self.model.encode(texts)
-            for i, text in enumerate(tqdm(texts, desc="处理文本")):
-                self.text_embeddings[text] = embeddings[i]
-                # 如果提供了文件名，则存储文本与文件名的对应关系
-                if file_names and i < len(file_names):
-                    self.file_info[text] = file_names[i]
+        max_characters = truncate_length or int(
+            os.getenv("RAG_CHUNK_CHARACTERS", "600")
+        )
+        overlap_characters = int(os.getenv("RAG_CHUNK_OVERLAP", "80"))
+        all_chunks: list[str] = []
+        all_sources: list[str | None] = []
+
+        for index, text in enumerate(texts):
+            source = file_names[index] if file_names and index < len(file_names) else None
+            chunks = chunk_text(
+                text,
+                max_characters=max_characters,
+                overlap_characters=min(overlap_characters, max_characters - 1),
+            )
+            for chunk_index, chunk in enumerate(chunks, start=1):
+                all_chunks.append(chunk)
+                all_sources.append(
+                    f"{source}#chunk{chunk_index}" if source else None
+                )
+
+        if not all_chunks:
+            return
+        if self.model is not None:
+            print(f"计算 {len(all_chunks)} 个段落感知文本分块的嵌入...")
+            embeddings = self.model.encode(all_chunks)
         else:
-            # 需要截断处理
-            print("处理文本并截断...")
-            for i, text in enumerate(tqdm(texts, desc="处理文本")):
-                file_name = file_names[i] if file_names and i < len(file_names) else None
-                
-                if len(text) <= truncate_length:
-                    # 文本长度小于截断长度，直接计算embedding
-                    embedding = self.model.encode([text])[0]
-                    self.text_embeddings[text] = embedding
-                    if file_name:
-                        self.file_info[text] = file_name
-                else:
-                    # 文本长度大于截断长度，需要截断
-                    chunks = []
-                    for j in range(0, len(text), truncate_length):
-                        chunk = text[j:j+truncate_length]
-                        chunks.append(chunk)
-                    
-                    print(f"文本 {i+1}/{len(texts)} 被截断为 {len(chunks)} 个片段")
-                    # 计算每个chunk的embedding
-                    chunk_embeddings = self.model.encode(chunks)
-                    for j, chunk in enumerate(tqdm(chunks, desc=f"处理文本 {i+1} 的片段")):
-                        self.text_embeddings[chunk] = chunk_embeddings[j]
-                        if file_name:
-                            # 为每个chunk添加文件信息和chunk索引
-                            self.file_info[chunk] = f"{file_name}#chunk{j+1}"
+            print(
+                f"未加载语义模型，以关键词检索模式保存 {len(all_chunks)} 个文本分块..."
+            )
+            embeddings = [None] * len(all_chunks)
+        for index, chunk in enumerate(tqdm(all_chunks, desc="处理文本分块")):
+            self.text_embeddings[chunk] = embeddings[index]
+            if all_sources[index]:
+                self.file_info[chunk] = all_sources[index]
+        self._lexical_index = None
     
     def process_directory(self, directory_path: str, file_pattern: str = "*.txt", 
                           truncate_length: Optional[int] = None, 
@@ -202,6 +226,7 @@ class TextEmbedding:
         else:
             print(f"未找到文件信息文件: {file_info_path}")
         
+        instance._check_loaded_vectors()
         return instance
     
     def search_similar_texts(self, query: str, top_n: int = 5, min_similarity: float = 0.5) -> List[Tuple[str, float, Optional[str]]]:
@@ -219,6 +244,20 @@ class TextEmbedding:
         if not self.text_embeddings:
             return []
         
+        if self.model is None:
+            lexical_threshold = float(
+                os.getenv("RAG_LEXICAL_MIN_SCORE", "0.05")
+            )
+            if self._lexical_index is None:
+                self._lexical_index = LexicalIndex([
+                    (text, self.file_info.get(text)) for text in self.text_embeddings
+                ])
+            return self._lexical_index.search(
+                query,
+                top_n=top_n,
+                min_score=lexical_threshold,
+            )
+
         print(f"计算查询文本 '{query}' 的嵌入向量...")
         # 计算查询文本的embedding
         query_embedding = self.model.encode([query])[0]
@@ -227,18 +266,26 @@ class TextEmbedding:
         print("计算相似度...")
         similarities = []
         for text, embedding in tqdm(self.text_embeddings.items(), desc="计算相似度"):
+            if embedding is None:
+                continue
             similarity = np.dot(query_embedding, embedding)
             if similarity >= min_similarity:
                 file_name = self.file_info.get(text)
                 similarities.append((text, float(similarity), file_name))
         
-        # 按相似度降序排序
+        # 扩大候选集后结合关键词覆盖率做二阶段重排序。
         similarities.sort(key=lambda x: x[1], reverse=True)
+        similarities = hybrid_rerank(
+            query,
+            similarities[: max(top_n * 4, top_n)],
+            top_n=top_n,
+            dense_weight=float(os.getenv("RAG_DENSE_WEIGHT", "0.8")),
+        )
         
         print(f"找到 {len(similarities)} 个相似度大于 {min_similarity} 的文本")
         
         # 返回前top_n个结果
-        return similarities[:top_n]
+        return similarities
     
     def save(self, file_path: str) -> None:
         """
@@ -289,6 +336,7 @@ class TextEmbedding:
         else:
             print(f"文件 {file_path} 不存在")
         
+        instance._check_loaded_vectors()
         return instance
     
     def get_all_texts(self) -> List[str]:
@@ -330,6 +378,7 @@ class TextEmbedding:
         """
         self.text_embeddings.clear()
         self.file_info.clear()
+        self._lexical_index = None
         print("已清空所有文本和嵌入向量")
     
     def __len__(self) -> int:
@@ -337,3 +386,24 @@ class TextEmbedding:
         返回存储的文本数量
         """
         return len(self.text_embeddings)
+
+    def get_status(self) -> dict[str, Any]:
+        """Return a serializable status without exposing configuration secrets."""
+        return {
+            "available": bool(self.text_embeddings),
+            "backend": self.backend,
+            "document_count": len(self.text_embeddings),
+            "degraded": self.backend != "semantic",
+            "reason": self.degraded_reason,
+        }
+
+    def _check_loaded_vectors(self) -> None:
+        """Do not advertise semantic search over a lexical-only saved index."""
+        if self.model is not None and self.text_embeddings and all(
+            vector is None for vector in self.text_embeddings.values()
+        ):
+            if os.getenv("RAG_BACKEND", "auto").strip().lower() == "semantic":
+                raise RuntimeError("知识库没有语义向量，请使用语义后端重新构建索引")
+            self.model = None
+            self.backend = "lexical"
+            self.degraded_reason = "知识库仅包含文本，已降级为关键词检索；语义检索需要重建向量"
