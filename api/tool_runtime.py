@@ -19,6 +19,23 @@ READ_ONLY_RETRYABLE_TOOLS = frozenset({"search_embedded_text"})
 class ToolResultError(RuntimeError):
     """A completed MCP response explicitly reported failure, not success."""
 
+    def __init__(self, message: str, *, payload: dict | None = None):
+        super().__init__(message)
+        payload = payload or {}
+        allowed_codes = {
+            "model_unavailable", "dependency_unavailable",
+            "bandgap_model_unavailable", "bandgap_out_of_domain",
+        }
+        code = payload.get("code")
+        self.code = code if isinstance(code, str) and code in allowed_codes else "tool_execution_failed"
+        self.status = "unavailable" if self.code in {
+            "model_unavailable", "dependency_unavailable", "bandgap_model_unavailable"
+        } else "tool_error"
+
+    def model_feedback(self) -> dict[str, str]:
+        # Forward stable operational metadata only, never arbitrary exception text.
+        return {"status": self.status, "code": self.code, "error_type": type(self).__name__}
+
 
 def _unwrap_envelope(payload):
     for _ in range(5):
@@ -190,7 +207,7 @@ async def execute_mcp_tool(
                 timeout=policy.timeout_seconds,
             )
             if result_failed(result):
-                raise ToolResultError(f"MCP 工具 {tool_name} 返回执行错误")
+                raise ToolResultError(f"MCP 工具 {tool_name} 返回执行错误", payload=tool_result_payload(result))
             log_event(
                 logger,
                 logging.INFO,

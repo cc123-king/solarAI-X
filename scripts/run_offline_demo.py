@@ -10,8 +10,8 @@ from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "api"))
-from demo_support import OfflineSession, ScriptedLLM, collect_events  # noqa: E402
-from mcp.types import CallToolResult, TextContent  # noqa: E402
+from demo_support import OfflineSession, ScriptedLLM, collect_events
+from mcp.types import CallToolResult, TextContent
 
 
 async def run_scenarios():
@@ -111,11 +111,15 @@ async def run_scenarios():
                 if message["role"] == "tool"
             ]
             payloads = [json.loads(message["content"]) for message in tools]
+            payloads = [
+                payload.get("result", payload.get("text", payload))
+                for payload in payloads
+            ]
             checks["real_bandgap"] = any(
-                payload.get("text", {}).get("bandgap") == 1.64 for payload in payloads
+                payload.get("bandgap") == 1.64 for payload in payloads
             )
             checks["real_retrieval"] = any(
-                payload.get("text", {}).get("results") for payload in payloads
+                payload.get("results") for payload in payloads
             )
             checks["context_visible"] = (
                 len([event for event in events if event["type"] == "context"]) == 2

@@ -1,4 +1,10 @@
 import os
+import sys
+
+
+def _progress(*values, **options):
+    print(*values, file=sys.stderr, **options)
+
 import numpy as np
 import pickle
 from typing import List, Dict, Tuple, Optional, Union, Any
@@ -99,10 +105,10 @@ class TextEmbedding:
         if not all_chunks:
             return
         if self.model is not None:
-            print(f"计算 {len(all_chunks)} 个段落感知文本分块的嵌入...")
+            _progress(f"计算 {len(all_chunks)} 个段落感知文本分块的嵌入...")
             embeddings = self.model.encode(all_chunks)
         else:
-            print(
+            _progress(
                 f"未加载语义模型，以关键词检索模式保存 {len(all_chunks)} 个文本分块..."
             )
             embeddings = [None] * len(all_chunks)
@@ -128,10 +134,10 @@ class TextEmbedding:
         file_paths = glob.glob(os.path.join(directory_path, file_pattern))
         
         if not file_paths:
-            print(f"在目录 {directory_path} 中未找到匹配 {file_pattern} 的文件")
+            _progress(f"在目录 {directory_path} 中未找到匹配 {file_pattern} 的文件")
             return
         
-        print(f"找到 {len(file_paths)} 个文件，开始处理...")
+        _progress(f"找到 {len(file_paths)} 个文件，开始处理...")
         
         # 批量读取所有文件内容
         texts = []
@@ -149,13 +155,13 @@ class TextEmbedding:
                 texts.append(content)
                 file_names.append(file_name)
             except Exception as e:
-                print(f"处理文件 {file_path} 时出错: {str(e)}")
+                _progress(f"处理文件 {file_path} 时出错: {str(e)}")
         
         # 批量处理所有文本
         if texts:
-            print(f"开始处理 {len(texts)} 个文本...")
+            _progress(f"开始处理 {len(texts)} 个文本...")
             self.add_texts(texts, truncate_length=truncate_length, file_names=file_names)
-            print(f"文本处理完成，共生成 {len(self.text_embeddings)} 个嵌入向量")
+            _progress(f"文本处理完成，共生成 {len(self.text_embeddings)} 个嵌入向量")
     
     def save_with_file_info(self, output_dir: str) -> None:
         """
@@ -167,7 +173,7 @@ class TextEmbedding:
         # 确保输出目录存在
         os.makedirs(output_dir, exist_ok=True)
         
-        print(f"保存嵌入向量到 {output_dir}...")
+        _progress(f"保存嵌入向量到 {output_dir}...")
         
         # 保存embedding
         embeddings_path = os.path.join(output_dir, "embeddings.pkl")
@@ -187,7 +193,7 @@ class TextEmbedding:
                 f.write(f"内容: {text[:100]}...\n" if len(text) > 100 else f"内容: {text}\n")
                 f.write("-" * 80 + "\n")
         
-        print(f"保存完成，共保存了 {len(self.text_embeddings)} 个嵌入向量")
+        _progress(f"保存完成，共保存了 {len(self.text_embeddings)} 个嵌入向量")
     
     @classmethod
     def load_with_file_info(cls, input_dir: str, model_name: str = MODELNAME,
@@ -205,7 +211,7 @@ class TextEmbedding:
         Returns:
             TextEmbedding实例
         """
-        print(f"从 {input_dir} 加载嵌入向量...")
+        _progress(f"从 {input_dir} 加载嵌入向量...")
         instance = cls(model_name, query_instruction, use_fp16)
         
         # 加载embedding
@@ -213,18 +219,18 @@ class TextEmbedding:
         if os.path.exists(embeddings_path):
             with open(embeddings_path, 'rb') as f:
                 instance.text_embeddings = pickle.load(f)
-            print(f"已加载 {len(instance.text_embeddings)} 个嵌入向量")
+            _progress(f"已加载 {len(instance.text_embeddings)} 个嵌入向量")
         else:
-            print(f"未找到嵌入向量文件: {embeddings_path}")
+            _progress(f"未找到嵌入向量文件: {embeddings_path}")
         
         # 加载文件信息
         file_info_path = os.path.join(input_dir, "file_info.pkl")
         if os.path.exists(file_info_path):
             with open(file_info_path, 'rb') as f:
                 instance.file_info = pickle.load(f)
-            print(f"已加载 {len(instance.file_info)} 个文件信息")
+            _progress(f"已加载 {len(instance.file_info)} 个文件信息")
         else:
-            print(f"未找到文件信息文件: {file_info_path}")
+            _progress(f"未找到文件信息文件: {file_info_path}")
         
         instance._check_loaded_vectors()
         return instance
@@ -258,12 +264,12 @@ class TextEmbedding:
                 min_score=lexical_threshold,
             )
 
-        print(f"计算查询文本 '{query}' 的嵌入向量...")
+        _progress(f"计算查询文本 '{query}' 的嵌入向量...")
         # 计算查询文本的embedding
         query_embedding = self.model.encode([query])[0]
         
         # 计算相似度
-        print("计算相似度...")
+        _progress("计算相似度...")
         similarities = []
         for text, embedding in tqdm(self.text_embeddings.items(), desc="计算相似度"):
             if embedding is None:
@@ -282,7 +288,7 @@ class TextEmbedding:
             dense_weight=float(os.getenv("RAG_DENSE_WEIGHT", "0.8")),
         )
         
-        print(f"找到 {len(similarities)} 个相似度大于 {min_similarity} 的文本")
+        _progress(f"找到 {len(similarities)} 个相似度大于 {min_similarity} 的文本")
         
         # 返回前top_n个结果
         return similarities
@@ -294,14 +300,14 @@ class TextEmbedding:
         Args:
             file_path: 保存的文件路径
         """
-        print(f"保存嵌入向量到 {file_path}...")
+        _progress(f"保存嵌入向量到 {file_path}...")
         data = {
             'text_embeddings': self.text_embeddings,
             'file_info': self.file_info
         }
         with open(file_path, 'wb') as f:
             pickle.dump(data, f)
-        print(f"保存完成，共保存了 {len(self.text_embeddings)} 个嵌入向量")
+        _progress(f"保存完成，共保存了 {len(self.text_embeddings)} 个嵌入向量")
     
     @classmethod
     def load(cls, file_path: str, model_name: str = MODELNAME,
@@ -319,7 +325,7 @@ class TextEmbedding:
         Returns:
             TextEmbedding实例
         """
-        print(f"从 {file_path} 加载嵌入向量...")
+        _progress(f"从 {file_path} 加载嵌入向量...")
         instance = cls(model_name, query_instruction, use_fp16)
         
         if os.path.exists(file_path):
@@ -332,9 +338,9 @@ class TextEmbedding:
                 else:
                     instance.text_embeddings = data
                     instance.file_info = {}
-            print(f"加载完成，共加载了 {len(instance.text_embeddings)} 个嵌入向量")
+            _progress(f"加载完成，共加载了 {len(instance.text_embeddings)} 个嵌入向量")
         else:
-            print(f"文件 {file_path} 不存在")
+            _progress(f"文件 {file_path} 不存在")
         
         instance._check_loaded_vectors()
         return instance
@@ -379,7 +385,7 @@ class TextEmbedding:
         self.text_embeddings.clear()
         self.file_info.clear()
         self._lexical_index = None
-        print("已清空所有文本和嵌入向量")
+        _progress("已清空所有文本和嵌入向量")
     
     def __len__(self) -> int:
         """

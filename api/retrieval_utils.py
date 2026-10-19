@@ -23,7 +23,9 @@ def _normalize(text: str) -> str:
 
 def _tokens(text: str) -> set[str]:
     normalized = _normalize(text).casefold()
-    latin = set(re.findall(r"[a-z0-9][a-z0-9+#._-]*", normalized))
+    # A sentence-ending period is punctuation, not part of a document identifier.
+    # Preserve internal dots in filenames, qualified names and version numbers.
+    latin = {token.rstrip(".") for token in re.findall(r"[a-z0-9][a-z0-9+#._-]*", normalized)}
     chinese: set[str] = set()
     for block in re.findall(r"[\u4e00-\u9fff]+", normalized):
         chinese.update(block)

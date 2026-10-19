@@ -33,8 +33,9 @@ from mlutil import (
     predict_perovskite_params_ml,
 )
 from aging_utils import predict_aging_curve, get_default_aging_params
-from tool_runtime import ToolExecutionPolicy, execute_mcp_tool, validate_tool_arguments, tool_result_payload
+from tool_runtime import ToolExecutionPolicy, ToolResultError, execute_mcp_tool, validate_tool_arguments, tool_result_payload
 from file_access import resolve_generated_file
+from execution_evidence import ExecutionEvidence, RUNTIME_INSTRUCTION, model_parameters
 from capabilities import get_rag_status
 from bandgap_baseline import BaselineDomainError
 from bandgap_utils import (
@@ -471,7 +472,8 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
         logger.info(f"开始处理请求，模型: {chat_request.model}")
         
         # 准备OpenAI消息格式
-        openai_messages = [{"role": msg.role, "content": msg.content} for msg in chat_request.messages]
+        execution = ExecutionEvidence(GENERATED_FILES_ROOT)
+        openai_messages = [{"role": "system", "content": RUNTIME_INSTRUCTION}, *[{"role": msg.role, "content": msg.content} for msg in chat_request.messages]]
         
         # 获取MCP工具列表
         available_tools = []
@@ -483,7 +485,7 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                     "function": {
                         "name": tool.name,
                         "description": tool.description,
-                        "parameters": tool.inputSchema
+                        "parameters": model_parameters(tool.name, tool.inputSchema)
                     }
                 } for tool in tools]
                 logger.info(f"为模型提供了 {len(available_tools)} 个可用工具")
@@ -593,8 +595,7 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                     if hasattr(delta, 'content') and delta.content:
                         content = delta.content
                         current_content += content
-                        full_content += content
-                        yield f"data: {json.dumps({'type': 'content', 'content': content})}\n\n"
+                        # Keep final content private until task-local artifact validation passes.
                 
                 # A partial tool request must not execute after the user disconnects.
                 if disconnect_event.is_set():
@@ -669,11 +670,15 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                             try:
                                 _trace_tool("tool_started", tool_name, arguments)
                                 try:
+                                    requested_arguments = arguments
+                                    arguments = execution.resolve_arguments(tool_name, arguments)
                                     result = await mcp_client.call_tool(tool_name, arguments)
+                                    result_payload = tool_result_payload(result)
+                                    verified_artifacts = execution.record(tool_info['id'], tool_name, result_payload)
                                 except Exception as tool_error:
-                                    _trace_tool("tool_failed", tool_name, arguments, error_type=type(tool_error).__name__)
+                                    _trace_tool("tool_failed", tool_name, arguments, error_type=type(tool_error).__name__, **({"result": tool_error.model_feedback()} if isinstance(tool_error, ToolResultError) else {}))
                                     raise
-                                _trace_tool("tool_completed", tool_name, arguments, result=tool_result_payload(result))
+                                _trace_tool("tool_completed", tool_name, arguments, result=result_payload, result_id=tool_info['id'], requested_arguments=requested_arguments)
                                 logger.info(f"工具 {tool_name} 返回结果: {result}")
                                 # 处理结果内容
                                 result_content = ""
@@ -826,6 +831,8 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                                 except Exception as e:
                                     logger.info(f"处理工具返回结果时出错: {str(e)}")
                                 
+                                # Expose stable task-local result references and verified downloadable paths.
+                                result_content = json.dumps({"result_id": tool_info['id'], "result": result_payload, "artifacts": verified_artifacts}, ensure_ascii=False)
                                 # 将工具调用结果添加到历史记录中
                                 openai_messages.append({
                                     "role": "tool",
@@ -842,7 +849,11 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                                 logger.info(f"工具 {tool_name} 调用成功")
                                 
                             except Exception as e:
-                                error_msg = f"工具 {tool_name} 调用失败: {str(e)}"
+                                error_msg = (
+                                    json.dumps(e.model_feedback(), ensure_ascii=False)
+                                    if isinstance(e, ToolResultError)
+                                    else f"工具 {tool_name} 调用失败: {str(e)}"
+                                )
                                 logger.info(error_msg)
                                 
                                 # 添加错误信息
@@ -870,7 +881,17 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                     is_first_response = False
                     continue
                 
-                # 如果没有工具调用，或者已经完成了工具调用和响应
+                # Validate before emitting or persisting any final answer text.
+                if not disconnect_event.is_set() and current_content:
+                    try:
+                        execution.validate_answer(current_content)
+                    except (ValueError, OSError, PermissionError) as error:
+                        task_id = _task_context.get()
+                        if task_id:
+                            state_store.event(task_id, "answer_rejected", {"code": str(error) if isinstance(error, ValueError) else "artifact_file_unavailable"})
+                        raise ValueError("最终回答产物未通过本任务记录校验，已拦截。") from None
+                    full_content = current_content
+                    yield f"data: {json.dumps({'type': 'content', 'content': current_content})}\n\n"
                 break
                 
             except Exception as e:
