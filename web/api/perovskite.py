@@ -1,9 +1,12 @@
+import logging
 import requests
 import base64
 from PIL import Image
 import io
 import config
 from api.status import response_error_message
+
+logger = logging.getLogger(__name__)
 
 API_BASE_URL = config.API_BASE_URL
 
@@ -15,7 +18,7 @@ def load_default_perovskite_params():
         else:
             return {}
     except Exception as e:
-        print(f"加载钙钛矿默认参数出错: {str(e)}")
+        logger.warning("perovskite_defaults_failed error_type=%s", type(e).__name__)
         return {}
 
 def call_perovskite_predict_api(perovskite_type, *args):

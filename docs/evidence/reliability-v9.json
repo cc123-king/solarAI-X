@@ -1,7 +1,7 @@
 {
   "version": "reliability-v9",
   "local_windows_tests": {
-    "tests": 227,
+    "tests": 231,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -16,8 +16,18 @@
   },
   "artifact_fingerprint_checked_before_release": true,
   "strict_cp1252_backend_fallback_cases": {
-    "passed": 3,
-    "total": 3,
-    "regressions_reproduced_before_fix": 3
+    "passed": 6,
+    "total": 6,
+    "regressions_reproduced_before_corresponding_fix": 6
+  },
+  "full_ui_import_encodings": [
+    "utf-8",
+    "cp1252"
+  ],
+  "added_console_regressions_failed_before_fix": 7,
+  "actual_local_mcp_strict_cp1252": {
+    "passed": 5,
+    "total": 5,
+    "paid_model_calls": 0
   }
 }

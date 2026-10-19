@@ -1,9 +1,12 @@
+import logging
 import requests
 import base64
 from PIL import Image
 import io
 import config
 from api.status import response_error_message
+
+logger = logging.getLogger(__name__)
 
 API_BASE_URL = config.API_BASE_URL
 
@@ -15,7 +18,7 @@ def load_default_solar_params():
         else:
             return {}
     except Exception as e:
-        print(f"加载默认太阳能参数出错: {str(e)}")
+        logger.warning("solar_defaults_failed error_type=%s", type(e).__name__)
         return {}
 
 def predict_solar_params(Si_thk, t_SiO2, t_polySi_rear_P, front_junc, rear_junc, resist_rear, 
