@@ -57,7 +57,7 @@ def load_history():
         else:
             return []
     except Exception as e:
-        print(f"加载历史出错: {str(e)}")
+        logger.warning("history_load_failed error_type=%s", type(e).__name__)
         return []
 
 def select_conversation(conversation_id):
@@ -196,7 +196,7 @@ def get_available_models():
         else:
             return [("DeepSeek Chat", "deepseek-chat")]
     except Exception as e:
-        print(f"获取模型出错: {str(e)}")
+        logger.warning("model_list_failed error_type=%s", type(e).__name__)
         return [("DeepSeek Chat", "deepseek-chat")]
 
 def get_conversation_choices():
@@ -209,5 +209,5 @@ def get_conversation_choices():
             choices.append(title)
         return choices
     except Exception as e:
-        print(f"获取对话选项出错: {str(e)}")
+        logger.warning("conversation_choices_failed error_type=%s", type(e).__name__)
         return []

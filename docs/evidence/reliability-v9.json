@@ -1,7 +1,7 @@
 {
   "version": "reliability-v9",
   "local_windows_tests": {
-    "tests": 224,
+    "tests": 227,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -14,5 +14,10 @@
     "total": 5,
     "real_model_quality_test": false
   },
-  "artifact_fingerprint_checked_before_release": true
+  "artifact_fingerprint_checked_before_release": true,
+  "strict_cp1252_backend_fallback_cases": {
+    "passed": 3,
+    "total": 3,
+    "regressions_reproduced_before_fix": 3
+  }
 }
