@@ -4,6 +4,11 @@ from api.chat import (
 )
 
 def build_chat_tab():
+    available_models = get_available_models()
+    default_model = (
+        available_models[0][1] if available_models else "deepseek-chat"
+    )
+    update_model(default_model)
     with gr.Row():
         with gr.Column(scale=3):
             chatbot = gr.Chatbot(
@@ -25,9 +30,9 @@ def build_chat_tab():
         with gr.Column(scale=1):
             with gr.Accordion("模型选择", open=True):
                 model_dropdown = gr.Dropdown(
-                    get_available_models(),
+                    available_models,
                     label="选择模型",
-                    value="deepseek-chat",
+                    value=default_model,
                     allow_custom_value=True
                 )
                 model_btn = gr.Button("切换模型")
@@ -57,4 +62,4 @@ def build_chat_tab():
         lambda: gr.update(choices=get_conversation_choices()),
         [],
         [history_dropdown]
-    ) 
+    )

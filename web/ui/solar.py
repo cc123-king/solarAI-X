@@ -1,6 +1,6 @@
 import gradio as gr
-from api.solar import load_default_solar_params, predict_solar_params, debounced_predict
-import os
+from api.solar import load_default_solar_params, predict_solar_params
+from api.status import get_model_capability
 
 def format_value_for_input(value):
     """Format value for gr.Number input: scientific notation if >1e6 or |value|<1e-3 & !=0."""
@@ -12,6 +12,8 @@ def format_value_for_input(value):
 
 def build_solar_tab():
     default_params = load_default_solar_params()
+    model_available, capability_message = get_model_capability("solar")
+    capability_status = gr.Markdown(capability_message)
     with gr.Row():
         jv_curve = gr.Image(label="JV曲线")
         with gr.Column():
@@ -72,8 +74,15 @@ def build_solar_tab():
         Dit_Si_SiOx, Dit_SiOx_Poly, Dit_top
     ]
 
+    with gr.Row():
+        predict_button = gr.Button(
+            "开始预测",
+            variant="primary",
+            interactive=model_available,
+        )
+        refresh_status_button = gr.Button("重新检查模型状态")
+
     def predict_with_status(*args):
-        loading_indicator.value = "_仿真状态: 计算中..._"
         try:
             # Convert scientific notation strings to floats if necessary
             processed_args = []
@@ -86,14 +95,15 @@ def build_solar_tab():
                 else:
                     processed_args.append(arg)
             
-            new_result_text, new_jv_curve = predict_solar_params(*processed_args)
-            loading_indicator.value = "_仿真状态: 完成_"
-            return new_result_text, new_jv_curve
+            new_result_text, new_jv_curve, succeeded = predict_solar_params(*processed_args)
+            status = "_仿真状态: 完成_" if succeeded else "_仿真状态: 不可用_"
+            return new_result_text, new_jv_curve, status
         except Exception as e:
-            loading_indicator.value = f"_仿真状态: 出错 ({type(e).__name__})_"
-            return f"预测出错: {str(e)}", None
-
-    debounced_predict_fn = debounced_predict(predict_with_status, delay_ms=500)
+            return (
+                f"预测出错: {str(e)}",
+                None,
+                f"_仿真状态: 出错 ({type(e).__name__})_",
+            )
 
     # Update display for scientific notation parameters
     Nd_top.change(lambda x: f"当前值: {float(x):.2e} cm^-3", Nd_top, Nd_top_display)
@@ -104,57 +114,18 @@ def build_solar_tab():
     Dit_SiOx_Poly.change(lambda x: f"当前值: {float(x):.2e} cm^-2", Dit_SiOx_Poly, Dit_SiOx_Poly_display)
     Dit_top.change(lambda x: f"当前值: {float(x):.2e} cm^-2", Dit_top, Dit_top_display)
 
-    for param_input_comp in input_params:
-        param_input_comp.change(
-            debounced_predict_fn,
-            inputs=input_params,
-            outputs=[result_text, jv_curve],
-            queue=True
-            # show_progress="full" # Consider adding progress for number inputs
-        )
-    
-    # Initial prediction on load
-    # Need to ensure the initial values are correctly passed
-    # Note: gr.Blocks().load() is not the standard way to trigger initial prediction with dynamic values from components
-    # It's better to trigger it once after the UI is defined or use default values directly in predict_solar_params if possible.
-    # For now, let's rely on the first change event or a dedicated button if needed for initial load.
-    # One way to trigger initial load with current component values:
-    def initial_load_trigger():
-        # This function will be called by gr.Blocks().load()
-        # It needs to gather current values from the input components
-        # However, direct access to component values here before interaction can be tricky.
-        # The `predict_with_status` will be called with default values from `input_params` list's components.
-        # This should work assuming components are initialized with default_params.
-        
-        # We need to ensure that the values passed to predict_with_status are the actual initial values
-        # of the components, not the components themselves.
-        # The .change() event handles this by passing the component's value.
-        # For .load(), we pass the components, and Gradio tries to get their values.
-        pass # This load call will be implicitly handled by Gradio with component values.
+    predict_button.click(
+        predict_with_status,
+        inputs=input_params,
+        outputs=[result_text, jv_curve, loading_indicator],
+        queue=True,
+    )
 
-    # Correct way to call initial prediction:
-    # Ensure default values are correctly passed to predict_solar_params
-    # Or, if predict_solar_params can take None and use internal defaults, that's an option.
-    # The debounced_predict_fn already handles args.
-    
-    # This will attempt to run prediction on load with current values of input_params components
-    # We need to ensure that predict_with_status correctly unpacks these if they are not direct values.
-    # Gradio's .load() will pass the initial values of the components listed in `input_params`.
-    
-    # Setup a dummy button to trigger initial load if direct load is problematic
-    # or rely on the first interaction.
-    # For simplicity, the .change() events will handle updates after initial state.
-    # Gradio's default behavior for `load` with components as inputs is to use their initial values.
-    
-    # To ensure initial prediction happens:
-    # We can call the prediction function once directly in Python after defining the UI,
-    # or use a hidden button that's "clicked" via JS, or rely on Gradio's load event.
-    # The simplest is to rely on Gradio's `load` with the input components.
-    
-    demo_block = gr.Blocks() # Create a temporary block for the load event
-    demo_block.load(
-         debounced_predict_fn, # Use the debounced function
-         inputs=input_params,
-         outputs=[result_text, jv_curve],
-         queue=True
-     ) 
+    def refresh_capability():
+        available, message = get_model_capability("solar")
+        return message, gr.update(interactive=available)
+
+    refresh_status_button.click(
+        refresh_capability,
+        outputs=[capability_status, predict_button],
+    )

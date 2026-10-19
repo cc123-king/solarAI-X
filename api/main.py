@@ -1,10 +1,20 @@
+import os
+
+# Limit native math libraries before NumPy/PyTorch are imported. This avoids
+# excessive thread allocation on memory-constrained Windows machines.
+for _thread_variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_thread_variable, "1")
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional, Tuple, Any, Literal
-from openai import OpenAI
-import os
+from openai import AsyncOpenAI
+from async_stream import open_stream, iter_stream, close_stream
+from task_store import TaskStore
+from contextvars import ContextVar
+from time import perf_counter
 from dotenv import load_dotenv
 from datetime import datetime
 import uuid
@@ -15,6 +25,7 @@ import base64
 import io
 from matplotlib.figure import Figure
 import logging
+from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from mlutil import (
     get_model_status,
@@ -22,6 +33,13 @@ from mlutil import (
     predict_perovskite_params_ml,
 )
 from aging_utils import predict_aging_curve, get_default_aging_params
+from tool_runtime import ToolExecutionPolicy, execute_mcp_tool, validate_tool_arguments, tool_result_payload
+from file_access import resolve_generated_file
+from capabilities import get_rag_status
+from bandgap_baseline import BaselineDomainError
+from bandgap_utils import (
+    BandgapParameters, BandgapModelUnavailable, get_bandgap_status, predict_bandgap,
+)
 # 配置日志
 log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'api.log')
 logging.basicConfig(
@@ -97,6 +115,8 @@ load_dotenv()
 async def lifespan(_: FastAPI):
     """统一管理MCP连接，替代已弃用的startup/shutdown装饰器。"""
 
+    state_store.recover()
+    conversations.update(state_store.conversations())
     try:
         connected = await mcp_client.connect()
         if connected:
@@ -119,6 +139,7 @@ async def lifespan(_: FastAPI):
         yield
     finally:
         await mcp_client.cleanup()
+        await close_stream(client)
 
 
 app = FastAPI(
@@ -138,23 +159,18 @@ app.add_middleware(
 )
 
 # 添加静态文件服务
+GENERATED_FILES_ROOT = Path(__file__).resolve().parents[1]
+
 @app.get("/api/files/{file_path:path}")
 async def get_file(file_path: str):
     """提供对生成的图表和文件的访问"""
     try:
-        # 设置安全限制，只允许访问指定目录
-        allowed_prefixes = ["simulation_results/", "plot_results/"]
-        is_allowed = any(file_path.startswith(prefix) for prefix in allowed_prefixes)
-        
-        if not is_allowed:
-            raise HTTPException(status_code=403, detail="Access forbidden")
-        
-        # 构建文件的完整路径
-        file_full_path = file_path
-        
-        # 检查文件是否存在
-        if not os.path.exists(file_full_path):
-            raise HTTPException(status_code=404, detail=f"File {file_path} not found")
+        try:
+            file_full_path = resolve_generated_file(file_path, GENERATED_FILES_ROOT)
+        except PermissionError:
+            raise HTTPException(status_code=403, detail="Access forbidden") from None
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Result file not found") from None
         
         # 返回文件
         return FileResponse(
@@ -167,23 +183,84 @@ async def get_file(file_path: str):
         logger.info(f"获取文件时出错: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error serving file: {str(e)}")
 
-# 初始化 OpenAI 客户端。未配置Key时仍允许健康检查和本地预测接口启动。
-deepseek_api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
-deepseek_base_url = os.getenv(
-    "DEEPSEEK_BASE_URL",
-    "https://api.deepseek.com",
-).strip()
+# OpenAI兼容配置同时支持DeepSeek、豆包方舟和其他兼容服务。
+llm_provider = os.getenv("LLM_PROVIDER", "deepseek").strip().lower()
+llm_api_key = (
+    os.getenv("LLM_API_KEY", "").strip()
+    or os.getenv("DEEPSEEK_API_KEY", "").strip()
+)
+llm_base_url = (
+    os.getenv("LLM_BASE_URL", "").strip()
+    or os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").strip()
+)
+llm_default_model = os.getenv("LLM_DEFAULT_MODEL", "deepseek-chat").strip()
+llm_model_name = os.getenv("LLM_MODEL_NAME", llm_default_model).strip()
 client = (
-    OpenAI(api_key=deepseek_api_key, base_url=deepseek_base_url)
-    if deepseek_api_key
+    AsyncOpenAI(api_key=llm_api_key, base_url=llm_base_url, timeout=45.0, max_retries=1)
+    if llm_api_key
     else None
 )
+
+
+def _configured_models() -> list[dict[str, str]]:
+    raw_models = os.getenv("LLM_MODELS", "").strip()
+    if raw_models:
+        models = []
+        for item in raw_models.split(","):
+            model_id, separator, display_name = item.strip().partition("|")
+            if model_id:
+                models.append({
+                    "id": model_id,
+                    "name": display_name if separator else model_id,
+                    "description": f"{llm_provider} OpenAI兼容模型",
+                })
+        if models:
+            return models
+
+    if llm_provider == "deepseek" and llm_default_model in {
+        "deepseek-chat",
+        "deepseek-reasoner",
+    }:
+        return [
+            {
+                "id": "deepseek-chat",
+                "name": "DeepSeek Chat",
+                "description": "标准对话模型",
+            },
+            {
+                "id": "deepseek-reasoner",
+                "name": "DeepSeek Reasoner",
+                "description": "具有推理能力的对话模型",
+            },
+        ]
+    return [{
+        "id": llm_default_model,
+        "name": llm_model_name,
+        "description": f"{llm_provider} OpenAI兼容模型",
+    }]
+
+
+def _is_reasoning_model(model: str) -> bool:
+    configured = {
+        value.strip()
+        for value in os.getenv("LLM_REASONING_MODELS", "deepseek-reasoner").split(",")
+        if value.strip()
+    }
+    return model in configured
 
 # 内存存储对话历史
 conversations: Dict[str, dict] = {}
 
 # MCP服务器地址
 MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://localhost:12346/sse")
+MAX_TOOL_ROUNDS = int(os.getenv("MAX_TOOL_ROUNDS", "4"))
+
+
+def _configured_tool_allowlist() -> frozenset[str] | None:
+    value = os.getenv("MCP_TOOL_ALLOWLIST", "").strip()
+    if not value:
+        return None
+    return frozenset(name.strip() for name in value.split(",") if name.strip())
 
 # MCP客户端类
 class MCPClient:
@@ -192,6 +269,17 @@ class MCPClient:
         self.session: Optional[ClientSession] = None
         self._streams_context = None
         self._session_context = None
+        self.available_tool_names: set[str] = set()
+        self.tool_schemas: dict[str, dict[str, Any]] = {}
+        self.tool_catalog_loaded = False
+        self.policy = ToolExecutionPolicy(
+            timeout_seconds=float(os.getenv("MCP_TOOL_TIMEOUT_SECONDS", "30")),
+            max_attempts=int(os.getenv("MCP_TOOL_MAX_ATTEMPTS", "3")),
+            retry_base_seconds=float(
+                os.getenv("MCP_TOOL_RETRY_BASE_SECONDS", "0.25")
+            ),
+            allowed_tools=_configured_tool_allowlist(),
+        )
         
     async def connect(self, server_url: str = MCP_SERVER_URL):
         """连接到MCP服务器"""
@@ -209,7 +297,18 @@ class MCPClient:
             
             # 列出可用工具，验证连接
             response = await self.session.list_tools()
-            tool_names = [tool.name for tool in response.tools]
+            tool_names = [
+                tool.name
+                for tool in response.tools
+                if self.policy.is_allowed(tool.name)
+            ]
+            self.available_tool_names = set(tool_names)
+            self.tool_schemas = {
+                tool.name: tool.inputSchema
+                for tool in response.tools
+                if tool.name in self.available_tool_names
+            }
+            self.tool_catalog_loaded = True
             logger.info(f"已连接到MCP服务器，可用工具: {tool_names}")
             return True
         except Exception as e:
@@ -223,9 +322,21 @@ class MCPClient:
         if not self.session:
             raise ValueError("MCP会话未初始化，请先调用connect()")
         
+        if not self.tool_catalog_loaded:
+            # Discovery must succeed before any call, including direct callers.
+            # A failed catalog request must never fall back to permissive input.
+            await self.list_tools()
+        if tool_name not in self.available_tool_names:
+            raise PermissionError(f"工具 {tool_name} 未由当前 MCP 服务注册或不在白名单中")
+        validate_tool_arguments(arguments, self.tool_schemas[tool_name])
+
         try:
-            result = await self.session.call_tool(tool_name, arguments)
-            return result
+            return await execute_mcp_tool(
+                lambda: self.session.call_tool(tool_name, arguments),
+                tool_name=tool_name,
+                policy=self.policy,
+                logger=logger,
+            )
         except Exception as e:
             logger.info(f"调用MCP工具 {tool_name} 失败: {str(e)}")
             import traceback
@@ -239,7 +350,15 @@ class MCPClient:
         
         try:
             response = await self.session.list_tools()
-            return response.tools
+            tools = [
+                tool
+                for tool in response.tools
+                if self.policy.is_allowed(tool.name)
+            ]
+            self.available_tool_names = {tool.name for tool in tools}
+            self.tool_schemas = {tool.name: tool.inputSchema for tool in tools}
+            self.tool_catalog_loaded = True
+            return tools
         except Exception as e:
             logger.info(f"获取工具列表失败: {str(e)}")
             import traceback
@@ -253,12 +372,78 @@ class MCPClient:
                 await self._session_context.__aexit__(None, None, None)
             if self._streams_context:
                 await self._streams_context.__aexit__(None, None, None)
+            self.session = None
+            self.available_tool_names.clear()
+            self.tool_schemas.clear()
+            self.tool_catalog_loaded = False
             logger.info("已断开MCP连接")
         except Exception as e:
             logger.info(f"清理MCP连接失败: {str(e)}")
 
 # 全局MCP客户端实例
 mcp_client = MCPClient()
+
+
+# Durable local state. Separate from .env, model files and generated artifacts.
+state_store = TaskStore(os.getenv("SOLAR_STATE_DB", str(GENERATED_FILES_ROOT / "data" / "state.sqlite3")))
+_task_context = ContextVar("solar_task_id", default=None)
+_active_tasks = {}
+
+def _trace_tool(kind, tool, arguments, **evidence):
+    task_id = _task_context.get()
+    if task_id:
+        state_store.event(task_id, kind, {"tool":tool, "arguments":arguments, **evidence})
+
+async def tracked_stream(chat_request, disconnected, task_id):
+    if state_store.get(task_id)["status"] == "cancelled":
+        return
+    started=perf_counter()
+    token=_task_context.set(task_id)
+    _active_tasks[task_id]=asyncio.current_task()
+    state_store.update(task_id, "running")
+    status="completed"
+    answer=[]
+    try:
+        yield f"data: {json.dumps({'type':'task','content':{'task_id':task_id}})}\n\n"
+        async for event in generate_stream_response(chat_request, disconnected):
+            if event.startswith("data: "):
+                item=json.loads(event[6:])
+                if item['type']=='error':status='failed'
+                if item['type']=='content':answer.append(item['content'])
+            yield event
+        if disconnected.is_set():status='cancelled'
+    except (asyncio.CancelledError, GeneratorExit):
+        status='cancelled'
+        raise
+    except Exception:
+        status='failed'
+        raise
+    finally:
+        _active_tasks.pop(task_id,None)
+        _task_context.reset(token)
+        state_store.update(task_id,status,''.join(answer),(perf_counter()-started)*1000)
+        if chat_request.conversation_id in conversations:
+            state_store.save_conversation(conversations[chat_request.conversation_id])
+
+@app.get("/api/tasks")
+async def list_tasks(limit: int = 20):
+    if not 1 <= limit <= 100:raise HTTPException(422,"limit must be 1..100")
+    return state_store.list(limit)
+
+@app.get("/api/tasks/{task_id}")
+async def get_task(task_id: str):
+    result=state_store.get(task_id)
+    if result is None:raise HTTPException(404,"Task not found")
+    return result
+
+@app.post("/api/tasks/{task_id}/cancel")
+async def cancel_task(task_id: str):
+    result=await get_task(task_id)
+    if result['status'] in {'queued','running'}:
+        task=_active_tasks.get(task_id)
+        if task is not None:task.cancel()
+        state_store.update(task_id,'cancelled')
+    return await get_task(task_id)
 
 class Message(BaseModel):
     role: str
@@ -267,9 +452,9 @@ class Message(BaseModel):
     context_info: Optional[List[Dict[str, str]]] = None  # 添加上下文信息字段
 
 class ChatRequest(BaseModel):
-    messages: List[Message]
-    conversation_id: str = None
-    model: str = "deepseek-chat"  # 默认使用 deepseek-chat
+    messages: List[Message] = Field(..., min_length=1)
+    conversation_id: Optional[str] = None
+    model: str = llm_default_model
 
 class Conversation(BaseModel):
     id: str
@@ -280,7 +465,7 @@ class Conversation(BaseModel):
 async def generate_stream_response(chat_request: ChatRequest, disconnect_event: asyncio.Event):
     try:
         if client is None:
-            yield f"data: {json.dumps({'type': 'error', 'content': '未配置DEEPSEEK_API_KEY，聊天功能暂不可用。'}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'content': '未配置LLM_API_KEY（也可使用兼容的DEEPSEEK_API_KEY），聊天功能暂不可用。'}, ensure_ascii=False)}\n\n"
             return
 
         logger.info(f"开始处理请求，模型: {chat_request.model}")
@@ -317,42 +502,51 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
         # 用于累积工具调用信息的变量
         accumulated_tool_calls = {}  # 格式: {index: {'id': id, 'name': name, 'arguments': arguments}}
         images_info = []
+        tool_rounds = 0
         while True:
+            if disconnect_event.is_set():
+                break
+            response = None
             try:
                 # 初始API调用或后续调用
                 if is_first_response:
                     # 首次调用，可能使用工具
-                    response = client.chat.completions.create(
+                    response = await open_stream(client.chat.completions.create,
                         model=chat_request.model,
                         messages=openai_messages,
                         tools=available_tools if available_tools else None,
-                        stream=True
+                        stream=True,
+                        max_tokens=int(os.getenv("LLM_MAX_OUTPUT_TOKENS", "2048")),
                     )
                 else:
-                    # 后续调用，无需再次提供工具列表
-                    response = client.chat.completions.create(
+                    # 后续轮次仍提供工具列表，让模型根据上一步结果自主决定是否继续调用。
+                    response = await open_stream(client.chat.completions.create,
                         model=chat_request.model,
                         messages=openai_messages,
-                        stream=True
+                        tools=available_tools if available_tools else None,
+                        stream=True,
+                        max_tokens=int(os.getenv("LLM_MAX_OUTPUT_TOKENS", "2048")),
                     )
                 
                 # 收集完整内容
                 current_content = ""
                 has_tool_calls = False
                 
-                for chunk in response:
+                async for chunk in iter_stream(response):
                     # 检查客户端是否断开连接
                     if disconnect_event.is_set():
                         logger.info("检测到客户端断开连接，停止生成")
                         break
                     
+                    if not chunk.choices:
+                        continue
                     delta = chunk.choices[0].delta
                     
                     # 首次有内容时，发送上下文信息（如果有）
                     if not has_sent_context and (hasattr(delta, 'content') and delta.content or 
                                                hasattr(delta, 'tool_calls') and delta.tool_calls):
-                        has_sent_context = True
                         if tool_results:
+                            has_sent_context = True
                             # 如果有工具调用结果，将其作为上下文发送
                             context_info = [
                                 {"file_name": result["call"], "content": result["summary"]} 
@@ -390,7 +584,7 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                                     accumulated_tool_calls[idx]['arguments'] += tool_call.function.arguments
                     
                     # 处理reasoning内容（对于deepseek-reasoner模型）
-                    if chat_request.model == "deepseek-reasoner" and hasattr(delta, 'reasoning_content') and delta.reasoning_content:
+                    if _is_reasoning_model(chat_request.model) and hasattr(delta, 'reasoning_content') and delta.reasoning_content:
                         reasoning = delta.reasoning_content
                         full_reasoning += reasoning
                         yield f"data: {json.dumps({'type': 'reasoning', 'content': reasoning})}\n\n"
@@ -402,8 +596,21 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                         full_content += content
                         yield f"data: {json.dumps({'type': 'content', 'content': content})}\n\n"
                 
+                # A partial tool request must not execute after the user disconnects.
+                if disconnect_event.is_set():
+                    break
+
                 # 如果有工具调用，处理累积的工具调用信息
                 if has_tool_calls and accumulated_tool_calls:
+                    if tool_rounds >= MAX_TOOL_ROUNDS:
+                        error_msg = (
+                            f"工具调用轮次超过安全上限 {MAX_TOOL_ROUNDS}，"
+                            "已停止继续执行并保留已有结果。"
+                        )
+                        logger.warning(error_msg)
+                        yield f"data: {json.dumps({'type': 'error', 'content': error_msg}, ensure_ascii=False)}\n\n"
+                        break
+                    tool_rounds += 1
                     # 收集当前聊天信息
                     assistant_message = {
                         "role": "assistant",
@@ -430,7 +637,7 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                             arguments = json.loads(arguments_str)
                         except json.JSONDecodeError:
                             logger.info(f"解析工具参数失败，格式错误: {arguments_str}")
-                            arguments = {}
+                            arguments = None
                         
                         logger.info(f"模型请求调用工具: {tool_name}，参数: {arguments}")
                         
@@ -443,11 +650,30 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                                 "arguments": arguments_str
                             }
                         })
+
+                        if arguments is None:
+                            error_msg = "工具参数不是合法 JSON，已拒绝执行。"
+                            openai_messages.append({
+                                "role": "tool",
+                                "tool_call_id": tool_info['id'],
+                                "content": error_msg,
+                            })
+                            tool_results.append({
+                                "call": tool_name,
+                                "summary": error_msg,
+                            })
+                            continue
                         
                         # 执行工具调用
                         if mcp_client.session:
                             try:
-                                result = await mcp_client.call_tool(tool_name, arguments)
+                                _trace_tool("tool_started", tool_name, arguments)
+                                try:
+                                    result = await mcp_client.call_tool(tool_name, arguments)
+                                except Exception as tool_error:
+                                    _trace_tool("tool_failed", tool_name, arguments, error_type=type(tool_error).__name__)
+                                    raise
+                                _trace_tool("tool_completed", tool_name, arguments, result=tool_result_payload(result))
                                 logger.info(f"工具 {tool_name} 返回结果: {result}")
                                 # 处理结果内容
                                 result_content = ""
@@ -638,6 +864,7 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                     
                     # 清空累积的工具调用信息，准备下一轮
                     accumulated_tool_calls.clear()
+                    has_sent_context = False
                     
                     # 开始下一轮，获取助手根据工具结果的回复
                     is_first_response = False
@@ -651,6 +878,8 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                 logger.info(error_msg)
                 yield f"data: {json.dumps({'type': 'error', 'content': error_msg})}\n\n"
                 break
+            finally:
+                await close_stream(response)
             
         logger.info(f"请求处理完成，模型: {chat_request.model}")
         if full_reasoning:
@@ -674,7 +903,7 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
             assistant_message = {
                 "role": "assistant",
                 "content": full_content,
-                "reasoning_content": full_reasoning if chat_request.model == "deepseek-reasoner" else None,
+                "reasoning_content": full_reasoning if _is_reasoning_model(chat_request.model) else None,
                 "images": images_info if images_info else None
             }
             
@@ -709,22 +938,27 @@ async def create_conversation():
             }
         ]
     }
+    state_store.save_conversation(conversations[conversation_id])
     return conversations[conversation_id]
 
 @app.get("/api/chat/history")
 async def get_history():
-    return list(conversations.values())
+    stored=state_store.conversations()
+    stored.update(conversations)
+    return list(stored.values())
 
 @app.post("/api/chat/send")
 async def send_message(chat_request: ChatRequest, request: Request):
     try:
+        if chat_request.conversation_id not in conversations:
+            conversations.update(state_store.conversations())
         # 如果没有会话ID，创建新会话
         if not chat_request.conversation_id or chat_request.conversation_id not in conversations:
             conversation = await create_conversation()
             chat_request.conversation_id = conversation["id"]
         
         logger.info(f"处理聊天请求: 模型={chat_request.model}, 会话ID={chat_request.conversation_id}")
-        logger.info(f"消息内容: {chat_request.messages[-1].content}")
+        logger.info("消息长度: %d", len(chat_request.messages[-1].content))
         
         # 创建一个事件来跟踪客户端断开连接
         disconnect_event = asyncio.Event()
@@ -734,13 +968,15 @@ async def send_message(chat_request: ChatRequest, request: Request):
             logger.info(f"客户端断开连接，会话ID={chat_request.conversation_id}")
             disconnect_event.set()
         
+        task_id=state_store.create(chat_request.conversation_id)
         return StreamingResponse(
-            generate_stream_response(chat_request, disconnect_event),
+            tracked_stream(chat_request, disconnect_event, task_id),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "X-Accel-Buffering": "no"
+                "X-Accel-Buffering": "no",
+                "X-Task-ID": task_id
             },
             background=BackgroundTask(on_disconnect)
         )
@@ -753,18 +989,9 @@ async def send_message(chat_request: ChatRequest, request: Request):
 @app.get("/api/models")
 async def get_models():
     return {
-        "models": [
-            {
-                "id": "deepseek-chat",
-                "name": "DeepSeek Chat",
-                "description": "标准对话模型"
-            },
-            {
-                "id": "deepseek-reasoner",
-                "name": "DeepSeek Reasoner",
-                "description": "具有推理能力的对话模型"
-            }
-        ]
+        "provider": llm_provider,
+        "default_model": llm_default_model,
+        "models": _configured_models(),
     }
 
 @app.get("/api/health")
@@ -773,8 +1000,16 @@ async def health_check():
         "status": "ok",
         "service": "SolarAI-X",
         "llm_configured": client is not None,
+        "llm": {
+            "configured": client is not None,
+            "provider": llm_provider,
+            "default_model": llm_default_model,
+            "base_url": llm_base_url,
+        },
         "mcp_connected": mcp_client.session is not None,
+        "rag": get_rag_status(),
         "models": get_model_status(),
+        "bandgap": get_bandgap_status(),
     }
 
 # 太阳能电池参数模型
@@ -835,7 +1070,7 @@ async def predict_params(params: SolarParams):
         }
         
         # 预测参数
-        predictions, fig = predict_solar_params(input_params)
+        predictions, fig = await asyncio.to_thread(predict_solar_params, input_params)
         
         # 将图像转换为base64编码
         buf = io.BytesIO()
@@ -961,7 +1196,7 @@ async def predict_aging(params: AgingPredictParams):
         input_params = params.model_dump()
         
         # 调用老化预测函数
-        predicted_curve, (fig, file_path) = predict_aging_curve(input_params)
+        predicted_curve, (fig, file_path) = await asyncio.to_thread(predict_aging_curve, input_params)
         
         # 将曲线数据转换为结构化格式
         # 假设前20个点是y坐标，后面的点是x坐标
@@ -1135,7 +1370,7 @@ async def predict_perovskite_params(params: PerovskiteParams ):
         
         # 从mlutil导入的predict_perovskite_params函数进行预测
 
-        predictions, fig = predict_perovskite_params_ml(input_params, perovskite_type)
+        predictions, fig = await asyncio.to_thread(predict_perovskite_params_ml, input_params, perovskite_type)
         logger.info(f"预测结果: {predictions}")
         # 将图像转换为base64编码
         buf = io.BytesIO()
@@ -1153,175 +1388,25 @@ async def predict_perovskite_params(params: PerovskiteParams ):
         status_code = 503 if isinstance(e, RuntimeError) else 500
         raise HTTPException(status_code=status_code, detail=str(e))
 
-# 钙钛矿带隙预测模型
-class BandgapPredictionParams(BaseModel):
-    perovskite_type: Literal["MAPbIBr", "CsMAFAPbIBr", "MAFA", "CsFA"] = Field(..., description="钙钛矿类型")
-    
-    # MAPbIBr 参数
-    Br_percentage: Optional[float] = Field(None, ge=0, le=1, description="Br百分比 (0-1), 仅用于MAPbIBr")
-    
-    # CsMAFAPbIBr 参数
-    Cs_ratio: Optional[float] = Field(None, ge=0, le=1, description="Cs比例 (0-1), 用于CsMAFAPbIBr和CsFA")
-    FA_ratio: Optional[float] = Field(None, ge=0, le=1, description="FA比例 (0-1), 用于CsMAFAPbIBr和MAFA")
-    I_ratio: Optional[float] = Field(None, ge=0, le=1, description="I比例 (0-1), 用于多种类型")
-    
-    # MAFA 参数
-    MA_ratio: Optional[float] = Field(None, ge=0, le=1, description="MA比例 (0-1), 用于MAFA")
+# API and MCP share the validated formula and capability contract.
+class BandgapPredictionParams(BandgapParameters):
+    pass
 
-# 预测钙钛矿材料带隙
+
+@app.get("/api/perovskite/bandgap-models")
+async def bandgap_models():
+    return get_bandgap_status()
+
+
 @app.post("/api/perovskite/predict-bandgap")
 async def predict_perovskite_bandgap(params: BandgapPredictionParams):
     try:
-        if params.perovskite_type == "MAPbIBr":
-            if params.Br_percentage is None:
-                raise HTTPException(status_code=400, detail="MAPbIBr类型需要提供Br_percentage参数")
-            
-            # 计算MAPbIBr的带隙
-            bandgap = 1.565 + 0.15 * params.Br_percentage
-            
-            return {
-                "bandgap": bandgap,
-                "unit": "eV",
-                "formula": "1.565 + 0.15 * Br_percentage"
-            }
-            
-        elif params.perovskite_type == "CsMAFAPbIBr":
-            if any(p is None for p in [params.Cs_ratio, params.FA_ratio, params.I_ratio]):
-                raise HTTPException(status_code=400, detail="CsMAFAPbIBr类型需要提供Cs_ratio, FA_ratio和I_ratio参数")
-            
-            # CsMAFAPbIBr系数
-            coefficients = np.array([0.00000000e+00, 1.85103066e+01, -5.67081558e+00, 3.26564185e-01,
-                                    -8.29277827e+01, -9.20817024e+00, -6.70094406e+00, 2.85323968e+00,
-                                    4.00960394e+00, -1.94235432e-01, 3.23777507e+01, -2.17075962e+00,
-                                    2.43646256e+01, -1.61156004e+00, 4.36068310e+00, 2.40287403e-01,
-                                    -1.08276395e+00, -6.04079873e-01, -7.64009588e-01, 3.49371493e-02])
-            intercept = 1.4053637187538268
-            
-            # 制作特征向量
-            x = np.array([params.Cs_ratio, params.FA_ratio, params.I_ratio])
-            
-            # 多项式特征展开 (3次多项式)
-            poly_features = []
-            for i in range(4):  # 度数从0到3
-                if i == 0:
-                    poly_features.append(1)  # 常数项
-                else:
-                    for j in range(len(x)**i):
-                        indices = np.unravel_index(j, tuple([len(x)] * i))
-                        term = np.prod([x[idx] for idx in indices])
-                        poly_features.append(term)
-            
-            # 裁剪到对应系数长度
-            poly_features = np.array(poly_features[:len(coefficients)])
-            
-            # 预测带隙
-            bandgap = np.dot(coefficients, poly_features) + intercept
-            
-            return {
-                "bandgap": float(bandgap),
-                "unit": "eV",
-                "model_metrics": {
-                    "degree": 3,
-                    "standard_error": 0.03,
-                    "R2_1": 0.59,
-                    "R2_2": 0.36
-                }
-            }
-            
-        elif params.perovskite_type == "MAFA":
-            if any(p is None for p in [params.MA_ratio, params.I_ratio]):
-                raise HTTPException(status_code=400, detail="MAFA类型需要提供MA_ratio和I_ratio参数")
-            
-            # MAFA系数
-            coefficients = np.array([6.67041914e-09, 1.80035243e+02, -4.12649518e+01, 5.81805141e+01,
-                                    1.50772432e+02, -1.51313184e+01, 7.31982621e+01, -1.45092632e+01,
-                                    3.48092947e+01, 9.27160558e+01, 4.33999570e+01, 6.27801418e+01,
-                                    -1.47514433e+02, -1.06362220e+02, -4.30021694e+01, -1.54381644e+01,
-                                    4.98614404e+01, -5.15784751e+01, 5.32769966e+01, 2.36684346e+01,
-                                    5.60752291e+00])
-            intercept = -121.17914592495342
-            
-            # 制作特征向量
-            x = np.array([params.MA_ratio, params.I_ratio])
-            
-            # 多项式特征展开 (5次多项式)
-            poly_features = []
-            for i in range(6):  # 度数从0到5
-                if i == 0:
-                    poly_features.append(1)  # 常数项
-                else:
-                    for j in range(len(x)**i):
-                        indices = np.unravel_index(j, tuple([len(x)] * i))
-                        term = np.prod([x[idx] for idx in indices])
-                        poly_features.append(term)
-            
-            # 裁剪到对应系数长度
-            poly_features = np.array(poly_features[:len(coefficients)])
-            
-            # 预测带隙
-            bandgap = np.dot(coefficients, poly_features) + intercept
-            
-            return {
-                "bandgap": float(bandgap),
-                "unit": "eV",
-                "model_metrics": {
-                    "degree": 5,
-                    "standard_error": 0.03,
-                    "R2_1": 0.76,
-                    "R2_2": 0.51
-                }
-            }
-            
-        elif params.perovskite_type == "CsFA":
-            if any(p is None for p in [params.Cs_ratio, params.I_ratio]):
-                raise HTTPException(status_code=400, detail="CsFA类型需要提供Cs_ratio和I_ratio参数")
-            
-            # CsFA系数
-            coefficients = np.array([0.00000000e+00, 1.28022233e+04, 1.45111610e+03, -7.40110126e+03,
-                                    -2.07915040e+04, -4.24724412e+02, -5.40241551e+03, 1.11307802e+04,
-                                    1.23925881e+04, -1.40613786e+02, -2.75876681e+02, 4.50375583e+03,
-                                    -5.35781276e+03, -3.21086901e+03, 9.14203208e+01, 1.01612857e+02,
-                                    1.03191599e+02, -9.50461745e+02, 8.37296821e+02, 3.04467837e+02,
-                                    -1.23098003e+01])
-            intercept = -1143.8520505192823
-            
-            # 制作特征向量
-            x = np.array([params.Cs_ratio, params.I_ratio])
-            
-            # 多项式特征展开 (5次多项式)
-            poly_features = []
-            for i in range(6):  # 度数从0到5
-                if i == 0:
-                    poly_features.append(1)  # 常数项
-                else:
-                    for j in range(len(x)**i):
-                        indices = np.unravel_index(j, tuple([len(x)] * i))
-                        term = np.prod([x[idx] for idx in indices])
-                        poly_features.append(term)
-            
-            # 裁剪到对应系数长度
-            poly_features = np.array(poly_features[:len(coefficients)])
-            
-            # 预测带隙
-            bandgap = np.dot(coefficients, poly_features) + intercept
-            
-            return {
-                "bandgap": float(bandgap),
-                "unit": "eV",
-                "model_metrics": {
-                    "degree": 5,
-                    "standard_error": 0.04,
-                    "R2_1": 0.73,
-                    "R2_2": 0.48
-                }
-            }
-        else:
-            raise HTTPException(status_code=400, detail="不支持的钙钛矿类型")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return predict_bandgap(params)
+    except BandgapModelUnavailable as error:
+        raise HTTPException(status_code=503, detail=str(error)) from None
+    except BaselineDomainError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from None
+
 
 # 直接运行入口点
 if __name__ == "__main__":
@@ -1329,7 +1414,7 @@ if __name__ == "__main__":
     api_host = os.getenv("SOLAR_API_HOST", "127.0.0.1").strip() or "127.0.0.1"
     api_port = int(os.getenv("SOLAR_API_PORT", "8001"))
     logger.info("正在启动服务器...")
-    logger.info("DeepSeek API已配置: %s", client is not None)
+    logger.info("LLM提供方=%s，API已配置: %s", llm_provider, client is not None)
     logger.info(f"MCP服务器地址: {MCP_SERVER_URL}")
     logger.info("API监听地址: http://%s:%s", api_host, api_port)
     uvicorn.run(app, host=api_host, port=api_port)

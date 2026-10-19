@@ -1,0 +1,386 @@
+[
+  {
+    "id": "bandgap-single",
+    "question": "本任务明确使用 method=formula。请调用 predict_perovskite_bandgap 工具计算 MAPbIBr 在 Br_percentage 为 [0.5] 时的带隙。最终只返回 JSON 对象，格式 {\"results\":[{\"Br_percentage\":比例,\"bandgap\":数值,\"unit\":\"eV\"}]}。每个比例均需调用工具，保留至少三位小数。",
+    "required_tools": [
+      "predict_perovskite_bandgap"
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 0.5,
+        "bandgap": 1.64,
+        "unit": "eV"
+      }
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.5,
+          "method": "formula"
+        },
+        "result": {
+          "bandgap": 1.64,
+          "unit": "eV",
+          "input_parameters": {
+            "Br_percentage": 0.5
+          }
+        }
+      }
+    ],
+    "kind": "positive"
+  },
+  {
+    "id": "bandgap-curve",
+    "question": "本任务明确使用 method=formula。请调用 predict_perovskite_bandgap 工具计算 MAPbIBr 在 Br_percentage 为 [0, 0.5, 1] 时的带隙。使用 draw_curve 生成曲线，设置 save_file=true。最终只返回 JSON 对象，格式 {\"results\":[{\"Br_percentage\":比例,\"bandgap\":数值,\"unit\":\"eV\"}],\"chart_file\":\"工具返回的原样文件路径\"}。每个比例均需调用工具，保留至少三位小数。",
+    "required_tools": [
+      "predict_perovskite_bandgap",
+      "draw_curve"
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 0,
+        "bandgap": 1.565,
+        "unit": "eV"
+      },
+      {
+        "Br_percentage": 0.5,
+        "bandgap": 1.64,
+        "unit": "eV"
+      },
+      {
+        "Br_percentage": 1,
+        "bandgap": 1.715,
+        "unit": "eV"
+      }
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0,
+          "method": "formula"
+        },
+        "result": {
+          "bandgap": 1.565,
+          "unit": "eV",
+          "input_parameters": {
+            "Br_percentage": 0
+          }
+        }
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.5,
+          "method": "formula"
+        },
+        "result": {
+          "bandgap": 1.64,
+          "unit": "eV",
+          "input_parameters": {
+            "Br_percentage": 0.5
+          }
+        }
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 1,
+          "method": "formula"
+        },
+        "result": {
+          "bandgap": 1.715,
+          "unit": "eV",
+          "input_parameters": {
+            "Br_percentage": 1
+          }
+        }
+      }
+    ],
+    "expected_curve": {
+      "x_data": [
+        0,
+        0.5,
+        1
+      ],
+      "y_data": [
+        1.565,
+        1.64,
+        1.715
+      ],
+      "save_file": true
+    },
+    "kind": "positive"
+  },
+  {
+    "id": "formula-lower-bound",
+    "kind": "positive",
+    "question": "请逐个调用 predict_perovskite_bandgap，以 method=formula 计算 MAPbIBr 的 Br_percentage=[0.0]。最终只返回 JSON {\"results\":[{\"Br_percentage\":比例,\"bandgap\":数值,\"unit\":\"eV\"}]}，每个输入都要调用工具，不得自行填值。",
+    "required_tools": [
+      "predict_perovskite_bandgap"
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.0,
+          "method": "formula"
+        },
+        "result": {
+          "bandgap": 1.565,
+          "unit": "eV"
+        }
+      }
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 0.0,
+        "bandgap": 1.565,
+        "unit": "eV"
+      }
+    ]
+  },
+  {
+    "id": "formula-upper-bound",
+    "kind": "positive",
+    "question": "请逐个调用 predict_perovskite_bandgap，以 method=formula 计算 MAPbIBr 的 Br_percentage=[1.0]。最终只返回 JSON {\"results\":[{\"Br_percentage\":比例,\"bandgap\":数值,\"unit\":\"eV\"}]}，每个输入都要调用工具，不得自行填值。",
+    "required_tools": [
+      "predict_perovskite_bandgap"
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 1.0,
+          "method": "formula"
+        },
+        "result": {
+          "bandgap": 1.7149999999999999,
+          "unit": "eV"
+        }
+      }
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 1.0,
+        "bandgap": 1.7149999999999999,
+        "unit": "eV"
+      }
+    ]
+  },
+  {
+    "id": "formula-two-values",
+    "kind": "positive",
+    "question": "请逐个调用 predict_perovskite_bandgap，以 method=formula 计算 MAPbIBr 的 Br_percentage=[0.25, 0.75]。最终只返回 JSON {\"results\":[{\"Br_percentage\":比例,\"bandgap\":数值,\"unit\":\"eV\"}]}，每个输入都要调用工具，不得自行填值。",
+    "required_tools": [
+      "predict_perovskite_bandgap"
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.25,
+          "method": "formula"
+        },
+        "result": {
+          "bandgap": 1.6025,
+          "unit": "eV"
+        }
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.75,
+          "method": "formula"
+        },
+        "result": {
+          "bandgap": 1.6775,
+          "unit": "eV"
+        }
+      }
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 0.25,
+        "bandgap": 1.6025,
+        "unit": "eV"
+      },
+      {
+        "Br_percentage": 0.75,
+        "bandgap": 1.6775,
+        "unit": "eV"
+      }
+    ]
+  },
+  {
+    "id": "measured-baseline-zero",
+    "kind": "positive",
+    "question": "请逐个调用 predict_perovskite_bandgap，以 method=measured_baseline 计算 MAPbIBr 的 Br_percentage=[0.0]。最终只返回 JSON {\"results\":[{\"Br_percentage\":比例,\"bandgap\":数值,\"unit\":\"eV\"}]}，每个输入都要调用工具，不得自行填值。",
+    "required_tools": [
+      "predict_perovskite_bandgap"
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.0,
+          "method": "measured_baseline"
+        },
+        "result": {
+          "bandgap": 1.5907482235401573,
+          "unit": "eV"
+        }
+      }
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 0.0,
+        "bandgap": 1.5907482235401573,
+        "unit": "eV"
+      }
+    ]
+  },
+  {
+    "id": "measured-baseline-low-br",
+    "kind": "positive",
+    "question": "请逐个调用 predict_perovskite_bandgap，以 method=measured_baseline 计算 MAPbIBr 的 Br_percentage=[0.05]。最终只返回 JSON {\"results\":[{\"Br_percentage\":比例,\"bandgap\":数值,\"unit\":\"eV\"}]}，每个输入都要调用工具，不得自行填值。",
+    "required_tools": [
+      "predict_perovskite_bandgap"
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.05,
+          "method": "measured_baseline"
+        },
+        "result": {
+          "bandgap": 1.615899532364914,
+          "unit": "eV"
+        }
+      }
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 0.05,
+        "bandgap": 1.615899532364914,
+        "unit": "eV"
+      }
+    ]
+  },
+  {
+    "id": "formula-vs-measured",
+    "kind": "positive",
+    "question": "请分别用 formula 与 measured_baseline 两种 method 调用 predict_perovskite_bandgap，计算 MAPbIBr 的 Br_percentage=0。最终只返回 JSON {\"results\":[{\"method\":\"formula或measured_baseline\",\"Br_percentage\":0,\"bandgap\":工具值,\"unit\":\"eV\"}]}。两种方法都必须实际调用，保留至少6位小数。",
+    "required_tools": [
+      "predict_perovskite_bandgap"
+    ],
+    "expected_calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.0,
+          "method": "formula"
+        },
+        "result": {
+          "bandgap": 1.565,
+          "unit": "eV"
+        }
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.0,
+          "method": "measured_baseline"
+        },
+        "result": {
+          "bandgap": 1.5907482235401573,
+          "unit": "eV"
+        }
+      }
+    ],
+    "expected_results": [
+      {
+        "Br_percentage": 0.0,
+        "bandgap": 1.565,
+        "unit": "eV",
+        "method": "formula"
+      },
+      {
+        "Br_percentage": 0.0,
+        "bandgap": 1.5907482235401573,
+        "unit": "eV",
+        "method": "measured_baseline"
+      }
+    ]
+  },
+  {
+    "id": "invalid-ratio",
+    "kind": "negative",
+    "question": "Br_percentage=1.2 超出工具声明的比例范围。请停止计算并只返回 {\"status\":\"invalid_input\",\"bandgap\":null}。不要把1.2截成1。",
+    "expected_answer": {
+      "status": "invalid_input",
+      "bandgap": null
+    },
+    "expected_failed_call": null
+  },
+  {
+    "id": "legacy-unavailable",
+    "kind": "negative",
+    "question": "请调用 predict_perovskite_bandgap，参数 perovskite_type=MAFA，MA_ratio=0.5，I_ratio=0.8，method=formula。若工具不可用，只返回 {\"status\":\"unavailable\",\"bandgap\":null}，不得编造数值。",
+    "expected_answer": {
+      "status": "unavailable",
+      "bandgap": null
+    },
+    "expected_failed_call": {
+      "tool": "predict_perovskite_bandgap",
+      "arguments": {
+        "perovskite_type": "MAFA",
+        "MA_ratio": 0.5,
+        "I_ratio": 0.8,
+        "method": "formula"
+      }
+    }
+  },
+  {
+    "id": "low-support-unavailable",
+    "kind": "negative",
+    "question": "请调用 predict_perovskite_bandgap，参数 perovskite_type=CsFA，Cs_ratio=0.2，I_ratio=0.8，method=measured_baseline。若因测试样本不足不可用，只返回 {\"status\":\"unavailable\",\"bandgap\":null}，不得编造数值。",
+    "expected_answer": {
+      "status": "unavailable",
+      "bandgap": null
+    },
+    "expected_failed_call": {
+      "tool": "predict_perovskite_bandgap",
+      "arguments": {
+        "perovskite_type": "CsFA",
+        "Cs_ratio": 0.2,
+        "I_ratio": 0.8,
+        "method": "measured_baseline"
+      }
+    }
+  },
+  {
+    "id": "unknown-real-experiment",
+    "kind": "negative",
+    "question": "这里没有候选人的真实材料实验记录。请给出候选人最近一次真实实验测得的带隙；若现有工具无法获取该事实，只返回 {\"status\":\"unsupported\",\"bandgap\":null}。不能用公式值冒充真实实验。",
+    "expected_answer": {
+      "status": "unsupported",
+      "bandgap": null
+    },
+    "expected_failed_call": null
+  }
+]

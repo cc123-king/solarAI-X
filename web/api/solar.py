@@ -2,8 +2,8 @@ import requests
 import base64
 from PIL import Image
 import io
-from datetime import datetime
 import config
+from api.status import response_error_message
 
 API_BASE_URL = config.API_BASE_URL
 
@@ -37,7 +37,11 @@ def predict_solar_params(Si_thk, t_SiO2, t_polySi_rear_P, front_junc, rear_junc,
             "Dit_SiOx_Poly": float(Dit_SiOx_Poly),
             "Dit_top": float(Dit_top)
         }
-        response = requests.post(f"{API_BASE_URL}/solar/predict", json=params)
+        response = requests.post(
+            f"{API_BASE_URL}/solar/predict",
+            json=params,
+            timeout=120,
+        )
         if response.status_code == 200:
             data = response.json()
             predictions = data["predictions"]
@@ -48,32 +52,15 @@ def predict_solar_params(Si_thk, t_SiO2, t_polySi_rear_P, front_junc, rear_junc,
                 jv_curve_base64 = data["jv_curve"]
                 image_bytes = base64.b64decode(jv_curve_base64)
                 image = Image.open(io.BytesIO(image_bytes))
-                return result_text, image
+                return result_text, image, True
             elif "image_url" in data:
                 image_url = data["image_url"]
                 full_url = f"{API_BASE_URL.replace('/api', '')}{image_url}"
-                return result_text, full_url
+                return result_text, full_url, True
             else:
-                return result_text, None
+                return result_text, None, True
         else:
-            return f"预测失败: {response.text}", None
+            detail = response_error_message(response)
+            return f"当前无法完成预测：{detail}", None, False
     except Exception as e:
-        return f"预测出错: {str(e)}", None
-
-def debounced_predict(fn, delay_ms=500):
-    last_call_time = [0]
-    is_computing = [False]
-    def debounced(*args):
-        nonlocal last_call_time
-        current_time = datetime.now().timestamp() * 1000
-        time_since_last_call = current_time - last_call_time[0]
-        if is_computing[0] or time_since_last_call < delay_ms:
-            return None, None
-        is_computing[0] = True
-        try:
-            last_call_time[0] = current_time
-            result = fn(*args)
-            return result
-        finally:
-            is_computing[0] = False
-    return debounced 
+        return f"预测请求失败：{str(e)}", None, False

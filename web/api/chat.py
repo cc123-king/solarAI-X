@@ -182,15 +182,22 @@ def send_message(message, chatbot):
 
 def get_available_models():
     try:
-        response = requests.get(f"{API_BASE_URL}/models")
+        response = requests.get(f"{API_BASE_URL}/models", timeout=5)
         if response.status_code == 200:
-            models = response.json().get("models", [])
-            return [(model["id"], model["name"]) for model in models]
+            payload = response.json()
+            models = payload.get("models", [])
+            default_model = payload.get("default_model")
+            if default_model:
+                current_session["selected_model"] = default_model
+            choices = [(model["name"], model["id"]) for model in models]
+            if default_model:
+                choices.sort(key=lambda choice: choice[1] != default_model)
+            return choices
         else:
-            return [("deepseek-chat", "DeepSeek Chat")]
+            return [("DeepSeek Chat", "deepseek-chat")]
     except Exception as e:
         print(f"获取模型出错: {str(e)}")
-        return [("deepseek-chat", "DeepSeek Chat")]
+        return [("DeepSeek Chat", "deepseek-chat")]
 
 def get_conversation_choices():
     try:
@@ -203,4 +210,4 @@ def get_conversation_choices():
         return choices
     except Exception as e:
         print(f"获取对话选项出错: {str(e)}")
-        return [] 
+        return []

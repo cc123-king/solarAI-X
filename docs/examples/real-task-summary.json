@@ -1,0 +1,20 @@
+{
+  "kind": "historical-real-model-real-sse-mcp",
+  "executed_at": "2026-10-18T07:48:49.703207+00:00",
+  "model": "qwen-plus",
+  "cases": [
+    {
+      "id": "bandgap-single",
+      "passed": true,
+      "elapsed_ms": 3037.604699959047,
+      "answer": "{\"results\":[{\"Br_percentage\":0.5,\"bandgap\":1.64,\"unit\":\"eV\"}]}"
+    },
+    {
+      "id": "bandgap-curve",
+      "passed": true,
+      "elapsed_ms": 10529.696300043724,
+      "answer": "{\"results\":[{\"Br_percentage\":0,\"bandgap\":1.565,\"unit\":\"eV\"},{\"Br_percentage\":0.5,\"bandgap\":1.64,\"unit\":\"eV\"},{\"Br_percentage\":1,\"bandgap\":1.715,\"unit\":\"eV\"}],\"chart_file\":\"plot_results/curve_20261018_154900_934210.png\"}"
+    }
+  ],
+  "limits": "Two fixed tasks; no general accuracy or scientific validity claim."
+}

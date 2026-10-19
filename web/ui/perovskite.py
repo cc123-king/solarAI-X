@@ -1,5 +1,6 @@
 import gradio as gr
-from api.perovskite import load_default_perovskite_params, call_perovskite_predict_api, debounced_predict
+from api.perovskite import load_default_perovskite_params, call_perovskite_predict_api
+from api.status import get_model_capability
 
 # Helper function to format values for gr.Number input
 def format_value_for_input(value):
@@ -59,6 +60,8 @@ perovskite_param_definitions = {
 
 def build_perovskite_tab():
     default_perovskite_params = load_default_perovskite_params()
+    model_available, capability_message = get_model_capability("perovskite_narrow")
+    capability_status = gr.Markdown(capability_message)
     
     with gr.Row():
         with gr.Column(scale=2):
@@ -114,10 +117,16 @@ def build_perovskite_tab():
 
     all_inputs_for_api = [perovskite_type_radio] + perovskite_ordered_controls
 
+    with gr.Row():
+        predict_button = gr.Button(
+            "开始预测",
+            variant="primary",
+            interactive=model_available,
+        )
+        refresh_status_button = gr.Button("重新检查模型状态")
+
     # Wrapper for prediction to handle loading state and parameter processing
     def perform_prediction_with_status(*inputs_from_ui):
-        perovskite_loading_indicator.value = "_仿真状态: 计算中..._"
-        
         # Extract perovskite_type and the rest of the parameters
         # The first input is perovskite_type_radio
         perovskite_type_val = inputs_from_ui[0]
@@ -141,30 +150,39 @@ def build_perovskite_tab():
             for name in ordered_param_names: # Add params in the defined order
                 args_for_api_call.append(api_params[name])
 
-            result_text, jv_curve = call_perovskite_predict_api(*args_for_api_call)
-            perovskite_loading_indicator.value = "_仿真状态: 完成_"
-            return result_text, jv_curve
+            result_text, jv_curve, succeeded = call_perovskite_predict_api(*args_for_api_call)
+            status = "_仿真状态: 完成_" if succeeded else "_仿真状态: 不可用_"
+            return result_text, jv_curve, status
         except Exception as e:
-            perovskite_loading_indicator.value = f"_仿真状态: 出错 ({type(e).__name__})_"
-            return f"预测出错: {str(e)}", None
+            return (
+                f"预测出错: {str(e)}",
+                None,
+                f"_仿真状态: 出错 ({type(e).__name__})_",
+            )
 
-    debounced_perovskite_predict_fn = debounced_predict(perform_prediction_with_status, delay_ms=500)
-
-    for control in all_inputs_for_api:
-        control.change(
-            debounced_perovskite_predict_fn,
-            inputs=all_inputs_for_api, # Pass all relevant controls
-            outputs=[perovskite_result_text, perovskite_jv_curve],
-            queue=True,
-            show_progress=False # Debounce handles visual feedback via loading_indicator
-        )
-
-
-    demo_block = gr.Blocks() # Temporary for load, if this is part of a larger Blocks structure, integrate carefully
-    demo_block.load(
-        debounced_perovskite_predict_fn, 
+    predict_button.click(
+        perform_prediction_with_status,
         inputs=all_inputs_for_api,
-        outputs=[perovskite_result_text, perovskite_jv_curve],
-        queue=True
+        outputs=[
+            perovskite_result_text,
+            perovskite_jv_curve,
+            perovskite_loading_indicator,
+        ],
+        queue=True,
     )
-    pass # Omitting auto-load to prevent issues unless explicitly requested. Changes will trigger prediction. 
+
+    def refresh_capability(perovskite_type):
+        model_name = f"perovskite_{perovskite_type}"
+        available, message = get_model_capability(model_name)
+        return message, gr.update(interactive=available)
+
+    perovskite_type_radio.change(
+        refresh_capability,
+        inputs=[perovskite_type_radio],
+        outputs=[capability_status, predict_button],
+    )
+    refresh_status_button.click(
+        refresh_capability,
+        inputs=[perovskite_type_radio],
+        outputs=[capability_status, predict_button],
+    )

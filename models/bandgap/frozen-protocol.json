@@ -1,0 +1,32 @@
+{
+  "seed": 20261019,
+  "features": [
+    "Cs",
+    "MA",
+    "Br"
+  ],
+  "measured_basis": [
+    "Absorption",
+    "EQE",
+    "Absorption Tauc-plot"
+  ],
+  "candidates": [
+    {
+      "degree": 1,
+      "alpha": 0.01
+    },
+    {
+      "degree": 2,
+      "alpha": 1.0
+    }
+  ],
+  "primary_group": "doi",
+  "secondary_group": "composition",
+  "quality_gates": {
+    "min_test_rows": 30,
+    "min_test_dois": 10,
+    "max_test_mae_eV": 0.15,
+    "max_composition_holdout_mae_eV": 0.2
+  },
+  "domain_max_nearest_linf": 0.12
+}

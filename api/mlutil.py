@@ -1,3 +1,8 @@
+import os
+
+for _thread_variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_thread_variable, "1")
+
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -5,7 +10,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from typing import List, Dict, Tuple
-import os
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -43,14 +47,23 @@ model_load_errors: dict[str, str] = {}
 
 
 def _load_predictor_group(path: Path, label: str) -> dict:
+    issues = []
     if TabularPredictor is None:
-        model_load_errors[label] = (
-            "未安装 autogluon.tabular，相关预测功能暂不可用。"
-        )
-        return {}
-
+        issues.append("未安装 autogluon.tabular")
     if not path.exists():
-        model_load_errors[label] = f"模型目录不存在：{path}"
+        issues.append(f"模型目录不存在：{path}")
+    else:
+        missing_parameters = [
+            parameter
+            for parameter in MODEL_PARAMETERS
+            if not (path / parameter).exists()
+        ]
+        if missing_parameters:
+            issues.append(
+                "缺少模型子目录：" + ", ".join(missing_parameters)
+            )
+    if issues:
+        model_load_errors[label] = "；".join(issues) + "。"
         return {}
 
     loaded = {}
@@ -106,14 +119,14 @@ def _require_predictors(
     loaded_predictors: dict,
     label: str,
 ) -> None:
+    if not loaded_predictors:
+        detail = model_load_errors.get(label, "模型尚未加载。")
+        raise RuntimeError(f"{label}预测功能不可用：{detail}")
+
     if TabularDataset is None:
         raise RuntimeError(
             "缺少 autogluon.tabular，请先安装完整项目依赖。"
         )
-
-    if not loaded_predictors:
-        detail = model_load_errors.get(label, "模型尚未加载。")
-        raise RuntimeError(f"{label}预测功能不可用：{detail}")
 
 def predict_solar_params(input_params: Dict[str, float]) -> Tuple[Dict[str, float], plt.Figure]:
     """
