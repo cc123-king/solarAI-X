@@ -53,21 +53,22 @@ Copy-Item .env.example .env
 
 ## 验证与边界
 
-2026-10-19两套Windows依赖环境各156项回归通过；本轮12个真实模型与SSE MCP固定任务通过，保留实际工具轨迹与PNG产物。数量不代表通用准确率、科学预测精度或生产吞吐。
+历史验证：2026-10-19早期本地Windows回归156项通过；2026-10-18的2条真实模型与SSE MCP固定任务通过，并用v3图片校验复评。数量不代表通用准确率、科学预测精度或生产吞吐。
+
+本轮扩展评测：40道独立任务首轮32/40、含重复46/56严格验收通过；固定8任务中7个三次通过。保留失败并修复标识漏检、错误类别丢失和无效表格数据，修复后Windows本地198项回归及8项实际MCP检查通过，尚未真实模型复测。详见 [扩展验收及限制](docs/EXPANDED_ACCEPTANCE_V6.md)。
+
 BGE语义检索与AutoGluon预测需要额外依赖及模型资产；能力状态接口会报告实际可用情况。关键词降级结果不会称为语义检索。
-当前为本机单用户、单API worker演示。另在不含 `.env` 的全新Python 3.12环境完成安装、同样数量的回归与实际启动验证。远程CI结果以本仓库Actions记录为准。
+当前为本机单用户、单API worker演示。另在不含 `.env` 的全新Python 3.12环境完成安装、同样数量的回归与实际启动验证。当前PR通过Windows与Ubuntu工作流执行回归，结果以Pull Request检查为准。
 
 [完整配置与运行参考](docs/REFERENCE.md) · [任务接口与v3说明](docs/JOB_READY_UPGRADE.md) · [详细架构](docs/ARCHITECTURE.md)
 
 带隙功能当前提供 MAPbIBr 原项目线性公式演示；CsMAFAPbIBr、MAFA、CsFA 缺少可核验训练资料，暂不可预测。详见 [v4科学模型契约修复](docs/SCIENTIFIC_MODEL_V4.md)。
 
-新增公开光谱文献训练的带隙基线、严格留出评估与12任务验证工具；详见 [v5改进](docs/PUBLIC_BASELINE_V5.md)。三个低样本材料家族仍未开放。12任务真实验收已完成，结果见下方与evaluation/results。
+新增公开光谱文献训练的带隙基线、严格留出评估与12任务验证工具；详见 [v5改进](docs/PUBLIC_BASELINE_V5.md)。三个低样本材料家族仍未开放。12任务的真实模型验收结果见下节。
 
 
 ### 真实模型验收（固定12任务）
 
 使用 qwen-plus 与真实本地MCP工具，12道固定任务12道通过（8正向、4负向），新增23次聊天、0次Embedding；覆盖公式/公开测量基线、绘图、越界与不可用状态。持久工具事件离线重评分仍为12/12。此结果限于这组作者编写任务，不代表通用Agent准确率或并发生产验证。见 [完整验收及限制](docs/REAL_AGENT_ACCEPTANCE_V5.md)。
 
-[逐任务公开证据](evaluation/results/README.md) · [公开文献模型留出图](docs/examples/public-bandgap-holdout.png)
-
-源代码采用MIT许可；公开测量数据及其派生模型保留CC BY4.0来源与修改说明，见models/bandgap/README.md。
+本轮可靠性修复：将计算结果引用绑定到实际绘图数据，最终回答在产物路径核对通过后输出；5个真实本地MCP场景通过。 最新Windows本地完整回归231项通过，未追加付费模型复测。实现与限制见 [可靠性修复说明](docs/RELIABILITY_V9.md)，远程验证以本次PR的Windows/Ubuntu检查结果为准。

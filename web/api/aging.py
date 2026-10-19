@@ -1,8 +1,11 @@
+import logging
 import requests
 import base64
 from PIL import Image
 import io
 import config
+
+logger = logging.getLogger(__name__)
 
 API_BASE_URL = config.API_BASE_URL
 
@@ -14,7 +17,7 @@ def load_default_aging_params():
         else:
             return {}
     except Exception as e:
-        print(f"加载默认老化参数出错: {str(e)}")
+        logger.warning("aging_defaults_failed error_type=%s", type(e).__name__)
         return {}
 
 def predict_aging_curve(params_dict):

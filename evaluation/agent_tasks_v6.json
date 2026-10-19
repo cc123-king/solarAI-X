@@ -1,0 +1,1249 @@
+[
+  {
+    "id": "solar-v6-01",
+    "category": "formula",
+    "question": "请通过带隙计算工具使用原线性公式计算MAPbIBr的Br比例0。values只包含bandgap_eV，使用返回的eV数值。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": true,
+    "formula_expected": 1.565
+  },
+  {
+    "id": "solar-v6-02",
+    "category": "formula",
+    "question": "请通过带隙计算工具使用原线性公式计算MAPbIBr的Br比例0.12。values只包含bandgap_eV，使用返回的eV数值。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.12,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false,
+    "formula_expected": 1.583
+  },
+  {
+    "id": "solar-v6-03",
+    "category": "formula",
+    "question": "请通过带隙计算工具使用原线性公式计算MAPbIBr的Br比例0.31。values只包含bandgap_eV，使用返回的eV数值。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.31,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false,
+    "formula_expected": 1.6115
+  },
+  {
+    "id": "solar-v6-04",
+    "category": "formula",
+    "question": "请通过带隙计算工具使用原线性公式计算MAPbIBr的Br比例0.48。values只包含bandgap_eV，使用返回的eV数值。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.48,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false,
+    "formula_expected": 1.637
+  },
+  {
+    "id": "solar-v6-05",
+    "category": "formula",
+    "question": "请通过带隙计算工具使用原线性公式计算MAPbIBr的Br比例0.76。values只包含bandgap_eV，使用返回的eV数值。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.76,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false,
+    "formula_expected": 1.6789999999999998
+  },
+  {
+    "id": "solar-v6-06",
+    "category": "formula",
+    "question": "请通过带隙计算工具使用原线性公式计算MAPbIBr的Br比例1。values只包含bandgap_eV，使用返回的eV数值。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 1,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false,
+    "formula_expected": 1.7149999999999999
+  },
+  {
+    "id": "solar-v6-07",
+    "category": "measured_baseline",
+    "question": "用公开测量基线方法而不是原公式估计MAPbIBr在Br比例0的带隙。values只包含bandgap_eV，不声称新增物理实验。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0,
+          "method": "measured_baseline"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-08",
+    "category": "measured_baseline",
+    "question": "用公开测量基线方法而不是原公式估计MAPbIBr在Br比例0.04的带隙。values只包含bandgap_eV，不声称新增物理实验。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.04,
+          "method": "measured_baseline"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": true
+  },
+  {
+    "id": "solar-v6-09",
+    "category": "measured_baseline",
+    "question": "用公开测量基线方法而不是原公式估计MAPbIBr在Br比例0.08的带隙。values只包含bandgap_eV，不声称新增物理实验。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.08,
+          "method": "measured_baseline"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-10",
+    "category": "curve_artifact",
+    "question": "把x=[0, 1, 2]、y=[2, 2, 2]绘制成曲线，标题为V6 curve 1并保存PNG。values为空对象，artifacts列出实际文件路径。",
+    "calls": [
+      {
+        "tool": "draw_curve",
+        "arguments": {
+          "x_data": [
+            0,
+            1,
+            2
+          ],
+          "y_data": [
+            2,
+            2,
+            2
+          ],
+          "title": "V6 curve 1",
+          "save_file": true
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "ok",
+    "values": {},
+    "artifact_count": 1,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-11",
+    "category": "curve_artifact",
+    "question": "把x=[0, 1, 2]、y=[1, 3, 2]绘制成曲线，标题为V6 curve 2并保存PNG。values为空对象，artifacts列出实际文件路径。",
+    "calls": [
+      {
+        "tool": "draw_curve",
+        "arguments": {
+          "x_data": [
+            0,
+            1,
+            2
+          ],
+          "y_data": [
+            1,
+            3,
+            2
+          ],
+          "title": "V6 curve 2",
+          "save_file": true
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "ok",
+    "values": {},
+    "artifact_count": 1,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-12",
+    "category": "curve_artifact",
+    "question": "把x=[0, 1, 2]、y=[-1, 0, 1]绘制成曲线，标题为V6 curve 3并保存PNG。values为空对象，artifacts列出实际文件路径。",
+    "calls": [
+      {
+        "tool": "draw_curve",
+        "arguments": {
+          "x_data": [
+            0,
+            1,
+            2
+          ],
+          "y_data": [
+            -1,
+            0,
+            1
+          ],
+          "title": "V6 curve 3",
+          "save_file": true
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "ok",
+    "values": {},
+    "artifact_count": 1,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-13",
+    "category": "table_artifact",
+    "question": "把数据[[1, 2], [3, 4]]渲染为PNG表格，列标签['A', 'B']，行标签['R1', 'R2']，标题V6 table 1，保存文件。values为空对象，artifacts列出路径。",
+    "calls": [
+      {
+        "tool": "draw_table",
+        "arguments": {
+          "table_data": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "col_labels": [
+            "A",
+            "B"
+          ],
+          "row_labels": [
+            "R1",
+            "R2"
+          ],
+          "title": "V6 table 1",
+          "save_file": true
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "ok",
+    "values": {},
+    "artifact_count": 1,
+    "repeat": true
+  },
+  {
+    "id": "solar-v6-14",
+    "category": "table_artifact",
+    "question": "把数据[[5, 8]]渲染为PNG表格，列标签['P', 'Q']，行标签['R1']，标题V6 table 2，保存文件。values为空对象，artifacts列出路径。",
+    "calls": [
+      {
+        "tool": "draw_table",
+        "arguments": {
+          "table_data": [
+            [
+              5,
+              8
+            ]
+          ],
+          "col_labels": [
+            "P",
+            "Q"
+          ],
+          "row_labels": [
+            "R1"
+          ],
+          "title": "V6 table 2",
+          "save_file": true
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "ok",
+    "values": {},
+    "artifact_count": 1,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-15",
+    "category": "table_artifact",
+    "question": "把数据[[0], [1], [2]]渲染为PNG表格，列标签['Value']，行标签['A', 'B', 'C']，标题V6 table 3，保存文件。values为空对象，artifacts列出路径。",
+    "calls": [
+      {
+        "tool": "draw_table",
+        "arguments": {
+          "table_data": [
+            [
+              0
+            ],
+            [
+              1
+            ],
+            [
+              2
+            ]
+          ],
+          "col_labels": [
+            "Value"
+          ],
+          "row_labels": [
+            "A",
+            "B",
+            "C"
+          ],
+          "title": "V6 table 3",
+          "save_file": true
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "ok",
+    "values": {},
+    "artifact_count": 1,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-16",
+    "category": "multi_step_curve",
+    "question": "分别通过原公式工具计算MAPbIBr的Br比例[0, 0.5, 1]，再用实际返回的带隙作为y值、Br比例作为x值绘图，标题V6 computed curve 1并保存。values按输入顺序包含gap_1、gap_2、gap_3。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.5,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 1,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      },
+      {
+        "tool": "draw_curve",
+        "arguments": {
+          "x_data": [
+            0,
+            0.5,
+            1
+          ],
+          "y_data": [
+            1.565,
+            1.64,
+            1.7149999999999999
+          ],
+          "title": "V6 computed curve 1",
+          "save_file": true
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "gap_1": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      },
+      "gap_2": {
+        "call": 1,
+        "path": [
+          "bandgap"
+        ]
+      },
+      "gap_3": {
+        "call": 2,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 1,
+    "repeat": true
+  },
+  {
+    "id": "solar-v6-17",
+    "category": "multi_step_curve",
+    "question": "分别通过原公式工具计算MAPbIBr的Br比例[0.1, 0.4, 0.9]，再用实际返回的带隙作为y值、Br比例作为x值绘图，标题V6 computed curve 2并保存。values按输入顺序包含gap_1、gap_2、gap_3。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.1,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.4,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      },
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.9,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      },
+      {
+        "tool": "draw_curve",
+        "arguments": {
+          "x_data": [
+            0.1,
+            0.4,
+            0.9
+          ],
+          "y_data": [
+            1.5799999999999998,
+            1.625,
+            1.7
+          ],
+          "title": "V6 computed curve 2",
+          "save_file": true
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "gap_1": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      },
+      "gap_2": {
+        "call": 1,
+        "path": [
+          "bandgap"
+        ]
+      },
+      "gap_3": {
+        "call": 2,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 1,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-18",
+    "category": "multi_step_table",
+    "question": "通过原公式工具计算Br比例0.24的MAPbIBr带隙，再将[[0.24,实际带隙]]绘制为PNG表格，列标签[\"Br\",\"Gap_eV\"]，行标签[\"MAPbIBr\"]，标题V6 computed table。values只包含bandgap_eV。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.24,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      },
+      {
+        "tool": "draw_table",
+        "arguments": {
+          "table_data": [
+            [
+              0.24,
+              1.601
+            ]
+          ],
+          "col_labels": [
+            "Br",
+            "Gap_eV"
+          ],
+          "row_labels": [
+            "MAPbIBr"
+          ],
+          "title": "V6 computed table",
+          "save_file": true
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "bandgap_eV": {
+        "call": 0,
+        "path": [
+          "bandgap"
+        ]
+      }
+    },
+    "artifact_count": 1,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-19",
+    "category": "fixture_retrieval",
+    "question": "在隔离的演示资料中检索“SOLAR-FIXTURE-17”，top_n=1、min_similarity=0.01。values包含match_count（实际命中条数）和source_files（返回的file_name列表）；这些资料是虚构验收夹具。",
+    "calls": [
+      {
+        "tool": "search_embedded_text",
+        "arguments": {
+          "query": "SOLAR-FIXTURE-17",
+          "top_n": 1,
+          "min_similarity": 0.01
+        },
+        "check_fields": [
+          "results"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "match_count": {
+        "call": 0,
+        "path": [
+          "results"
+        ],
+        "op": "len"
+      },
+      "source_files": {
+        "call": 0,
+        "path": [
+          "results"
+        ],
+        "op": "source_names"
+      }
+    },
+    "artifact_count": 0,
+    "repeat": true
+  },
+  {
+    "id": "solar-v6-20",
+    "category": "fixture_retrieval",
+    "question": "在隔离的演示资料中检索“SOLAR-FIXTURE-23”，top_n=1、min_similarity=0.01。values包含match_count（实际命中条数）和source_files（返回的file_name列表）；这些资料是虚构验收夹具。",
+    "calls": [
+      {
+        "tool": "search_embedded_text",
+        "arguments": {
+          "query": "SOLAR-FIXTURE-23",
+          "top_n": 1,
+          "min_similarity": 0.01
+        },
+        "check_fields": [
+          "results"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "match_count": {
+        "call": 0,
+        "path": [
+          "results"
+        ],
+        "op": "len"
+      },
+      "source_files": {
+        "call": 0,
+        "path": [
+          "results"
+        ],
+        "op": "source_names"
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-21",
+    "category": "fixture_retrieval",
+    "question": "在隔离的演示资料中检索“DEMO-SAMPLE-A observation window”，top_n=1、min_similarity=0.01。values包含match_count（实际命中条数）和source_files（返回的file_name列表）；这些资料是虚构验收夹具。",
+    "calls": [
+      {
+        "tool": "search_embedded_text",
+        "arguments": {
+          "query": "DEMO-SAMPLE-A observation window",
+          "top_n": 1,
+          "min_similarity": 0.01
+        },
+        "check_fields": [
+          "results"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "match_count": {
+        "call": 0,
+        "path": [
+          "results"
+        ],
+        "op": "len"
+      },
+      "source_files": {
+        "call": 0,
+        "path": [
+          "results"
+        ],
+        "op": "source_names"
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-22",
+    "category": "fixture_ingestion",
+    "question": "仅将evaluation/fixtures_v6/source下的*.md演示文件入库并保存到evaluation/fixtures_v6/index。工具参数只用directory_path、file_pattern、save_dir三项。values只包含vector_count，不访问其他目录。",
+    "calls": [
+      {
+        "tool": "process_directory_for_embedding",
+        "arguments": {
+          "directory_path": "evaluation/fixtures_v6/source",
+          "file_pattern": "*.md",
+          "save_dir": "evaluation/fixtures_v6/index"
+        },
+        "check_fields": [
+          "status",
+          "vector_count"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "vector_count": {
+        "call": 0,
+        "path": [
+          "vector_count"
+        ]
+      }
+    },
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-23",
+    "category": "legacy_aging_execution_only",
+    "question": "使用工具默认参数执行老化曲线工具。values包含point_count（x_values长度）、first_y（y_values首值）、last_y（y_values末值），artifacts列出文件路径。只检验软件输出一致性，不评价科学准确性。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_aging",
+        "arguments": {},
+        "check_fields": [
+          "x_values",
+          "y_values"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "point_count": {
+        "call": 0,
+        "path": [
+          "x_values"
+        ],
+        "op": "len"
+      },
+      "first_y": {
+        "call": 0,
+        "path": [
+          "y_values",
+          0
+        ]
+      },
+      "last_y": {
+        "call": 0,
+        "path": [
+          "y_values",
+          -1
+        ]
+      }
+    },
+    "artifact_count": 1,
+    "repeat": true
+  },
+  {
+    "id": "solar-v6-24",
+    "category": "legacy_aging_execution_only",
+    "question": "仅把Stability_temperature_range设为35，其余用工具默认参数执行老化曲线工具。values包含point_count（x_values长度）、first_y（y_values首值）、last_y（y_values末值），artifacts列出文件路径。只检验软件输出一致性，不评价科学准确性。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_aging",
+        "arguments": {
+          "Stability_temperature_range": 35
+        },
+        "check_fields": [
+          "x_values",
+          "y_values"
+        ]
+      }
+    ],
+    "status": "ok",
+    "values": {
+      "point_count": {
+        "call": 0,
+        "path": [
+          "x_values"
+        ],
+        "op": "len"
+      },
+      "first_y": {
+        "call": 0,
+        "path": [
+          "y_values",
+          0
+        ]
+      },
+      "last_y": {
+        "call": 0,
+        "path": [
+          "y_values",
+          -1
+        ]
+      }
+    },
+    "artifact_count": 1,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-25",
+    "category": "invalid_ratio",
+    "question": "有人要求用原公式计算MAPbIBr的Br比例-0.01。检查工具契约，参数非法时明确拒绝，不给出带隙。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": -0.01,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "invalid_input",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": true
+  },
+  {
+    "id": "solar-v6-26",
+    "category": "invalid_ratio",
+    "question": "有人要求用原公式计算MAPbIBr的Br比例1.01。检查工具契约，参数非法时明确拒绝，不给出带隙。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 1.01,
+          "method": "formula"
+        },
+        "check_fields": [
+          "bandgap",
+          "unit"
+        ]
+      }
+    ],
+    "status": "invalid_input",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-27",
+    "category": "out_of_measured_domain",
+    "question": "实际尝试公开测量基线预测MAPbIBr在Br比例0.8的带隙。若工具报告超出训练邻近范围，返回tool_error并不外推；不要换用原公式。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAPbIBr",
+          "Br_percentage": 0.8,
+          "method": "measured_baseline"
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "tool_error",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-28",
+    "category": "unavailable_bandgap",
+    "question": "请实际尝试带隙工具，参数{\"perovskite_type\": \"CsMAFAPbIBr\", \"Cs_ratio\": 0.2, \"FA_ratio\": 0.7, \"I_ratio\": 0.8, \"method\": \"formula\"}；只有工具报告可用才给数值，若模型不可用则如实说明，不得用MAPbIBr代替。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "CsMAFAPbIBr",
+          "Cs_ratio": 0.2,
+          "FA_ratio": 0.7,
+          "I_ratio": 0.8,
+          "method": "formula"
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "unavailable",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-29",
+    "category": "unavailable_bandgap",
+    "question": "请实际尝试带隙工具，参数{\"perovskite_type\": \"MAFA\", \"MA_ratio\": 0.4, \"I_ratio\": 0.8, \"method\": \"formula\"}；只有工具报告可用才给数值，若模型不可用则如实说明，不得用MAPbIBr代替。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "MAFA",
+          "MA_ratio": 0.4,
+          "I_ratio": 0.8,
+          "method": "formula"
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "unavailable",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-30",
+    "category": "unavailable_bandgap",
+    "question": "请实际尝试带隙工具，参数{\"perovskite_type\": \"CsFA\", \"Cs_ratio\": 0.2, \"I_ratio\": 0.8, \"method\": \"formula\"}；只有工具报告可用才给数值，若模型不可用则如实说明，不得用MAPbIBr代替。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "CsFA",
+          "Cs_ratio": 0.2,
+          "I_ratio": 0.8,
+          "method": "formula"
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "unavailable",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": true
+  },
+  {
+    "id": "solar-v6-31",
+    "category": "unavailable_bandgap",
+    "question": "请实际尝试带隙工具，参数{\"perovskite_type\": \"CsFA\", \"Cs_ratio\": 0.2, \"I_ratio\": 0.8, \"method\": \"measured_baseline\"}；只有工具报告可用才给数值，若模型不可用则如实说明，不得用MAPbIBr代替。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_bandgap",
+        "arguments": {
+          "perovskite_type": "CsFA",
+          "Cs_ratio": 0.2,
+          "I_ratio": 0.8,
+          "method": "measured_baseline"
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "unavailable",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-32",
+    "category": "curve_business_failure",
+    "question": "请实际调用绘图工具，x_data=[0,1]、y_data=[1]、title=\"V6 mismatched curve\"。如工具拒绝长度不一致，应返回业务失败，不自行填补点。",
+    "calls": [
+      {
+        "tool": "draw_curve",
+        "arguments": {
+          "x_data": [
+            0,
+            1
+          ],
+          "y_data": [
+            1
+          ],
+          "title": "V6 mismatched curve"
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "tool_error",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-33",
+    "category": "table_business_failure",
+    "question": "请实际把table_data=[[1,2],[3,4]]、col_labels=[\"only_one\"]、row_labels=[\"A\",\"B\"]交给表格工具。工具拒绝标签维度不一致时返回业务失败，不修改用户输入。",
+    "calls": [
+      {
+        "tool": "draw_table",
+        "arguments": {
+          "table_data": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "col_labels": [
+            "only_one"
+          ],
+          "row_labels": [
+            "A",
+            "B"
+          ]
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "tool_error",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-34",
+    "category": "invalid_retrieval",
+    "question": "在演示知识库搜索DEMO，top_n=0。先验证参数，非法时拒绝。",
+    "calls": [
+      {
+        "tool": "search_embedded_text",
+        "arguments": {
+          "query": "DEMO",
+          "top_n": 0
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "invalid_input",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-35",
+    "category": "invalid_retrieval",
+    "question": "在演示知识库搜索DEMO，min_similarity=2。先验证参数，非法时拒绝。",
+    "calls": [
+      {
+        "tool": "search_embedded_text",
+        "arguments": {
+          "query": "DEMO",
+          "min_similarity": 2
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "invalid_input",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-36",
+    "category": "optional_solar_unavailable",
+    "question": "我已确认使用默认参数进行单次硅电池仿真。请实际尝试工具；若模型或依赖不可用，返回unavailable并不编造效率。",
+    "calls": [
+      {
+        "tool": "simulate_solar_cell",
+        "arguments": {},
+        "check_fields": []
+      }
+    ],
+    "status": "unavailable",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-37",
+    "category": "optional_solar_unavailable",
+    "question": "我已确认按param_name=\"Si_thk\"、param_range=[160,10,180]进行批量硅电池仿真，其他默认。请实际尝试工具；模型或依赖不可用时如实返回unavailable。",
+    "calls": [
+      {
+        "tool": "batch_simulate_solar_cell",
+        "arguments": {
+          "param_name": "Si_thk",
+          "param_range": [
+            160,
+            10,
+            180
+          ]
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "unavailable",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-38",
+    "category": "optional_perovskite_unavailable",
+    "question": "实际尝试perovskite_type=\"narrow\"的钙钛矿性能参数预测，其余默认；模型或依赖不可用时返回unavailable，不给虚构效率。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_parameters",
+        "arguments": {
+          "perovskite_type": "narrow"
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "unavailable",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-39",
+    "category": "optional_perovskite_unavailable",
+    "question": "实际尝试perovskite_type=\"wide\"的钙钛矿性能参数预测，其余默认；模型或依赖不可用时返回unavailable，不给虚构效率。",
+    "calls": [
+      {
+        "tool": "predict_perovskite_parameters",
+        "arguments": {
+          "perovskite_type": "wide"
+        },
+        "check_fields": []
+      }
+    ],
+    "status": "unavailable",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  },
+  {
+    "id": "solar-v6-40",
+    "category": "unknown_physical_measurement",
+    "question": "请给出DEMO-SAMPLE-A昨天在真实实验室测出的带隙精确数值。演示资料没有该物理实验，不要用公式计算值充当实测值，资料不支持时返回unsupported。",
+    "calls": [],
+    "status": "unsupported",
+    "values": {},
+    "artifact_count": 0,
+    "repeat": false
+  }
+]

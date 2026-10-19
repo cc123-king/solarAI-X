@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
 import os
+import sys
+
+
+def _progress(*values, **options):
+    print(*values, file=sys.stderr, **options)
+
 
 for _thread_variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
     os.environ.setdefault(_thread_variable, "1")
 
 import base64
+import math
 import io
 from typing import Annotated, Dict, Any, List, Tuple, Optional, Literal
 from pydantic import Field
@@ -35,8 +42,9 @@ from retrieval_utils import context_excerpt
 from file_access import generated_output_directory
 from pathlib import Path
 # 导入钙钛矿预测相关模块
-from mlutil import predict_perovskite_params_ml
+from mlutil import predict_perovskite_params_ml, get_model_status
 from aging_utils import predict_aging_curve, get_default_aging_params
+from bandgap_baseline import BaselineDomainError
 from bandgap_utils import (
     BandgapParameters, BandgapModelUnavailable, get_bandgap_status, predict_bandgap,
 )
@@ -99,17 +107,17 @@ def load_text_embedding():
     global text_embedding
     try:
         if os.path.exists(embedding_dir):
-            print(f"正在从 {embedding_dir} 加载嵌入向量...")
+            _progress(f"正在从 {embedding_dir} 加载嵌入向量...")
             text_embedding = TextEmbedding.load_with_file_info(embedding_dir)
             status = text_embedding.get_status()
-            print(
+            _progress(
                 "知识库加载完成："
                 f"{status['document_count']} 个片段，后端={status['backend']}"
             )
         else:
-            print(f"嵌入向量目录 {embedding_dir} 不存在，跳过加载")
+            _progress(f"嵌入向量目录 {embedding_dir} 不存在，跳过加载")
     except Exception as e:
-        print(f"知识检索暂不可用，将继续启动其他MCP工具：{e}")
+        _progress(f"知识检索暂不可用，将继续启动其他MCP工具：{e}")
 
 # 调用加载函数
 load_text_embedding()
@@ -243,6 +251,14 @@ async def draw_table(
     # 检查输入数据
     if not isinstance(table_data, list) or not all(isinstance(row, list) for row in table_data):
         raise ValueError("表格数据必须是二维列表")
+    if not table_data or not table_data[0] or any(len(row) != len(table_data[0]) for row in table_data):
+        raise ValueError("表格数据必须是非空且每行列数相同的二维列表")
+    if any(
+        type(cell) not in (str, int, float, bool)
+        or (isinstance(cell, float) and not math.isfinite(cell))
+        for row in table_data for cell in row
+    ):
+        raise ValueError("表格单元格必须是文本或有限数值，不能用null代替尚未得到的计算结果")
     
     # 如果没有提供行列标签，创建默认标签
     num_rows = len(table_data)
@@ -350,10 +366,10 @@ async def simulate_solar_cell(
         await ctx.info("开始太阳能电池仿真...")
 
     if not predictor or TabularDataset is None:
-        raise RuntimeError(
-            "太阳能预测模型尚未就绪："
-            + (solar_model_error or "未知模型加载错误")
-        )
+        return {"text": {
+            "status": "unavailable", "code": "model_unavailable",
+            "error": "太阳能预测模型或可选依赖尚未就绪。",
+        }}
     
     # 准备输入参数
     input_params = {
@@ -492,10 +508,10 @@ async def batch_simulate_solar_cell(
         await ctx.info(f"开始批量仿真，参数: {param_name}")
 
     if not predictor or TabularDataset is None:
-        raise RuntimeError(
-            "太阳能预测模型尚未就绪："
-            + (solar_model_error or "未知模型加载错误")
-        )
+        return {"text": {
+            "status": "unavailable", "code": "model_unavailable",
+            "error": "太阳能预测模型或可选依赖尚未就绪。",
+        }}
     
     # 检查参数名是否有效
     valid_params = {
@@ -849,6 +865,8 @@ async def process_directory_for_embedding(
             "text": {
                 "status": "success",
                 "embedding_dir": save_dir,
+                "artifacts": [],
+                "artifact_note": "索引目录用于内部检索，不是下载产物；不要推测或返回索引文件下载路径。",
                 "vector_count": len(text_embedding),
                 "message": f"嵌入向量生成完成，已保存到 {save_dir} 目录",
             }
@@ -1062,7 +1080,6 @@ async def predict_perovskite_aging(
         x_coords = predicted_curve[20:].tolist()
         
         # 转换图像为MCP Image对象
-        aging_image = fig_to_image(fig)
         plt.close(fig)
         
         if ctx:
@@ -1074,8 +1091,7 @@ async def predict_perovskite_aging(
                 "y_values": y_coords,
                 "file_path": file_path,
                 "summary": f"预测了钙钛矿太阳能电池在给定条件下的老化性能，时间范围包含{len(x_coords)}个数据点"
-            },
-            "images": [aging_image]
+            }
         }
         
     except Exception as e:
@@ -1191,6 +1207,12 @@ async def predict_perovskite_parameters(
         # 验证钙钛矿类型
         if perovskite_type.lower() not in ['narrow', 'wide']:
             raise ValueError("钙钛矿类型必须是'narrow'或'wide'")
+        model_key = "perovskite_" + perovskite_type.lower()
+        if not get_model_status()[model_key]["available"]:
+            return {"text": {
+                "status": "unavailable", "code": "model_unavailable",
+                "error": "钙钛矿参数预测模型或可选依赖尚未就绪。",
+            }}
         
         # 构建参数字典
         input_params = {
@@ -1303,6 +1325,8 @@ async def predict_perovskite_bandgap(
             "code": "bandgap_model_unavailable",
             "model_status": get_bandgap_status().get(perovskite_type),
         }}
+    except BaselineDomainError as error:
+        return {"text": {"error": str(error), "code": "bandgap_out_of_domain"}}
     except ValueError:
         # Invalid values may include user content; do not echo it in tool logs.
         return {"text": {
@@ -1349,11 +1373,11 @@ if __name__ == "__main__":
     
     if args.stdio:
         # 使用STDIO传输运行
-        print("启动太阳能电池仿真MCP服务器，使用STDIO传输")
+        _progress("启动太阳能电池仿真MCP服务器，使用STDIO传输")
         mcp.run()
     else:
         # 使用SSE传输运行
-        print(f"启动太阳能电池仿真MCP服务器，使用SSE传输，地址: http://{args.host}:{args.port}")
+        _progress(f"启动太阳能电池仿真MCP服务器，使用SSE传输，地址: http://{args.host}:{args.port}")
         mcp_server = mcp._mcp_server  # 访问底层服务器实例
         debug_enabled = os.getenv("MCP_DEBUG", "false").lower() == "true"
         starlette_app = create_starlette_app(

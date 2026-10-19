@@ -32,6 +32,7 @@ def run_script(script, output_dir):
         encoding="utf-8",
         errors="replace",
         timeout=60,
+        check=False,
     )
     assert process.returncode == 0, process.stdout + process.stderr
 
@@ -51,10 +52,10 @@ def test_real_local_tool_demo_and_discovered_schema(tmp_path):
     )
     messages = scenario["model_requests"][-1]["messages"]
     retrieval = next(
-        json.loads(message["content"])["text"]
+        json.loads(message["content"])["result"]
         for message in messages
         if message["role"] == "tool"
-        and "results" in json.loads(message["content"]).get("text", {})
+        and "results" in json.loads(message["content"]).get("result", {})
     )
     # A successful tool call alone is insufficient: evidence must reach the model.
     assert any('EXTRACT NAME="FF"' in item["content"] for item in retrieval["results"])
