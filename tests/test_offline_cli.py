@@ -42,7 +42,7 @@ def test_real_local_tool_demo_and_discovered_schema(tmp_path):
     directory = next(tmp_path.glob("demo-*"))
     summary = json.loads((directory / "summary.json").read_text(encoding="utf-8"))
     assert summary["passed_count"] == summary["scenario_count"] == 5
-    assert summary["catalog_count"] == 9
+    assert summary["catalog_count"] == 10
     assert not summary["live_model_calls"] and not summary["real_mcp_sse"]
     catalog = json.loads((directory / "tool-catalog.json").read_text(encoding="utf-8"))
     search = next(tool for tool in catalog if tool["name"] == "search_embedded_text")

@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "source_doi": "10.17632/s2vnyfgc4s.2",
+  "source_license": "CC-BY-4.0",
+  "source_author": "Chenhui Zhang",
+  "source_sha256": "14479b042a29137d107aa7198eea4d82ab2804177c2e583074bf674cb54287d2",
+  "spec_sha256": "9bc000c421d4898f0efdf80e9dae97adc271fc2c5154910a5d9b862700717764",
+  "source_rows": 1893,
+  "unique_feature_rows": 1893,
+  "feature_names": [
+    "T_Si",
+    "T_SiO2",
+    "T_PolySi",
+    "Me",
+    "Mh",
+    "Emitter_Depth",
+    "Inner_Diffusion_Depth",
+    "Rs",
+    "Na_Top",
+    "Nd_Rear",
+    "Dit_Si_SiOx",
+    "Dit_SiOx_Poly",
+    "Dit_Emitter",
+    "Cap_Area",
+    "Nt_top",
+    "Nt_rear",
+    "Cap_Area_Defect",
+    "Taun_PolySi"
+  ],
+  "target_names": [
+    "Vm",
+    "Im",
+    "Voc",
+    "Jsc",
+    "FF",
+    "Eff"
+  ],
+  "split": {
+    "train": {
+      "rows": 1337,
+      "ids_sha256": "9da724226fb9c60dbc36b5f785748b5bbb6a888b7ea2eb04ed9c871629c93c33"
+    },
+    "development": {
+      "rows": 278,
+      "ids_sha256": "4623d55baaacc284882d30f43b4dda008aa34a6671618ff38ade0a38d6bf7f17"
+    },
+    "test": {
+      "rows": 278,
+      "ids_sha256": "9d3798b7f2e805e661a79bde0d114ad4b82f0e98e0b26d945ca107d3a4eb8297"
+    }
+  },
+  "selected": "extra_trees_128_depth16_leaf2",
+  "development": [
+    {
+      "candidate": "extra_trees_128_depth16_leaf2",
+      "selection_score": 0.16246963218952068,
+      "metrics": {
+        "Vm": {
+          "mae": 0.006510322612249516,
+          "r2": 0.9609067558692544,
+          "median_baseline_mae": 0.03229474820143885
+        },
+        "Im": {
+          "mae": 0.3952108389975063,
+          "r2": 0.8551168024424283,
+          "median_baseline_mae": 1.0606827338129499
+        },
+        "Voc": {
+          "mae": 0.004320756027867639,
+          "r2": 0.9784513801238556,
+          "median_baseline_mae": 0.033696129496402875
+        },
+        "Jsc": {
+          "mae": 0.2704961725924593,
+          "r2": 0.9338375420487007,
+          "median_baseline_mae": 1.0347758992805753
+        },
+        "FF": {
+          "mae": 0.12489688730689535,
+          "r2": 0.9579097243399106,
+          "median_baseline_mae": 0.6714766187050364
+        },
+        "Eff": {
+          "mae": 0.23071528546924172,
+          "r2": 0.9768811744262343,
+          "median_baseline_mae": 1.6579208633093525
+        }
+      }
+    },
+    {
+      "candidate": "random_forest_128_depth16_leaf2",
+      "selection_score": 0.17190977881424566,
+      "metrics": {
+        "Vm": {
+          "mae": 0.006827361322531871,
+          "r2": 0.952851649240594,
+          "median_baseline_mae": 0.03229474820143885
+        },
+        "Im": {
+          "mae": 0.4006545077737523,
+          "r2": 0.8508694362487312,
+          "median_baseline_mae": 1.0606827338129499
+        },
+        "Voc": {
+          "mae": 0.004926975364434506,
+          "r2": 0.9728188724185046,
+          "median_baseline_mae": 0.033696129496402875
+        },
+        "Jsc": {
+          "mae": 0.2885333020147398,
+          "r2": 0.925536605708728,
+          "median_baseline_mae": 1.0347758992805753
+        },
+        "FF": {
+          "mae": 0.13118187929445432,
+          "r2": 0.9533837719239342,
+          "median_baseline_mae": 0.6714766187050364
+        },
+        "Eff": {
+          "mae": 0.25438404907486356,
+          "r2": 0.9725988185025096,
+          "median_baseline_mae": 1.6579208633093525
+        }
+      }
+    }
+  ],
+  "heldout_test_metrics": {
+    "Vm": {
+      "mae": 0.006365828921260869,
+      "r2": 0.958197751134416,
+      "median_baseline_mae": 0.029497255395683444
+    },
+    "Im": {
+      "mae": 0.4033132350248746,
+      "r2": 0.8729502250452288,
+      "median_baseline_mae": 1.1460086330935249
+    },
+    "Voc": {
+      "mae": 0.004372128480591159,
+      "r2": 0.9752637668720459,
+      "median_baseline_mae": 0.031825014388489205
+    },
+    "Jsc": {
+      "mae": 0.2642647823198392,
+      "r2": 0.9345674709706105,
+      "median_baseline_mae": 1.095636690647482
+    },
+    "FF": {
+      "mae": 0.14757968551086184,
+      "r2": 0.9194994904637569,
+      "median_baseline_mae": 0.682890287769784
+    },
+    "Eff": {
+      "mae": 0.25529399817156095,
+      "r2": 0.9685668648457817,
+      "median_baseline_mae": 1.5809410071942447
+    }
+  },
+  "in_domain_heldout_rows": 275,
+  "in_domain_heldout_metrics": {
+    "Vm": {
+      "mae": 0.0063528726922579565,
+      "r2": 0.95784876532391,
+      "median_baseline_mae": 0.029309952727272725
+    },
+    "Im": {
+      "mae": 0.4031821013766611,
+      "r2": 0.8730650866519628,
+      "median_baseline_mae": 1.146890909090909
+    },
+    "Voc": {
+      "mae": 0.004395152823485487,
+      "r2": 0.9749062941853912,
+      "median_baseline_mae": 0.031731890909090905
+    },
+    "Jsc": {
+      "mae": 0.2630981088277223,
+      "r2": 0.9352461441923476,
+      "median_baseline_mae": 1.0988727272727274
+    },
+    "FF": {
+      "mae": 0.1430901023452228,
+      "r2": 0.9222758482257525,
+      "median_baseline_mae": 0.6767036363636362
+    },
+    "Eff": {
+      "mae": 0.25599784576525075,
+      "r2": 0.9684413802683974,
+      "median_baseline_mae": 1.5850854545454547
+    }
+  },
+  "heldout_domain_coverage": 0.9892086330935251,
+  "quality_gates": {
+    "min_test_rows": 200,
+    "max_each_target_mae_over_median_baseline": 0.8,
+    "max_eff_mae_percentage_points": 1.0,
+    "min_in_domain_test_coverage": 0.8
+  },
+  "quality_gates_passed": true,
+  "domain_max_nearest_rms": 0.26090572100534515,
+  "model_sha256": "1dfebd147074d395d20a8f6064da561c9fc6c49096fbe8dd7de8690bc6cad4b8",
+  "model_bytes": 7566866,
+  "input_units": "source_native; no undocumented conversion to legacy 13-feature interface",
+  "source_label_range": {
+    "Vm": [
+      0.479997,
+      0.7
+    ],
+    "Im": [
+      36.1875,
+      43.5644
+    ],
+    "Voc": [
+      0.557005,
+      0.777216
+    ],
+    "Jsc": [
+      38.4307,
+      45.2859
+    ],
+    "FF": [
+      62.7694,
+      86.4844
+    ],
+    "Eff": [
+      20.0001,
+      28.8791
+    ]
+  },
+  "independent_experimental_validation": false,
+  "original_autogluon_model_recovered": false,
+  "scope": "single public TOPCon dataset; simulated/research labels, not new device experiments or original AutoGluon recovery",
+  "paid_model_calls": 0
+}

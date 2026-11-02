@@ -9,6 +9,7 @@
 | 工具路由 | 只从注册 MCP 工具选择，保留检索/绘图依赖并记录方法与数量 | 默认 `SOLAR_TOOL_ROUTING=all`；`lexical` 可直接演示。`semantic` 要求本地 encoder，不以关键词冒充语义；无新的成功率提升结论 |
 | 可观测性 | `/api/metrics` 提供任务、模型、工具、usage、延迟和固定错误类别；OpenTelemetry task/model/tool 同一 trace | 默认不外传正文、记忆、参数和异常原文。只有 provider 上报 usage 才计 token；缺失不代表零成本。真实 collector、Prometheus 规则触发/恢复由独立 Linux CI 实验验证，企业后端尚未接入 |
 | LoRA | 助手响应损失掩码、分组清单校验、真实 Qwen2.5-0.5B CPU PEFT 训练、适配器重载、HTTP API 与实际 MCP 调用 | 12/4 条作者构造种子，3 个训练步骤。四条新冻结探针仅验证小样本；不上传权重，不将 loss 或四条结果当泛化收益，vLLM 未验证 |
+| 科学资产恢复 | 作者许可的公开 TOPCon 数据重新训练数值森林，新增完整18字段单条/批量 MCP 预测、邻域拒绝、结果引用与健康检查；278条留出 Eff MAE 0.255个百分点 | 只证明单一公开研究数据；旧13字段原模型与窄/宽带隙钙钛矿仍缺失，不能声称新器件实验或完整 JV 仿真。见 [来源与复现](PUBLIC_TOPCON_RECOVERY.md) |
 
 ## 演示与配置
 

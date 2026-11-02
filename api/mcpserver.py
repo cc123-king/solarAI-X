@@ -45,6 +45,7 @@ from file_access import generated_output_directory
 from pathlib import Path
 # 导入钙钛矿预测相关模块
 from mlutil import predict_perovskite_params_ml, get_model_status
+from topcon_public import configured_model, TopconUnavailable, TopconDomainError
 from aging_utils import predict_aging_curve, get_default_aging_params
 from bandgap_baseline import BaselineDomainError
 from bandgap_utils import (
@@ -337,6 +338,32 @@ async def draw_table(
     result["text"]["file_path"] = file_path
     
     return plot_response(result, table_image, save_file)
+
+@mcp.tool()
+async def predict_topcon_public(
+    inputs: Annotated[List[Dict[str, float]], Field(min_length=1, max_length=32)],
+) -> Dict[str, Any]:
+    """Predict 1-32 TOPCon records with an explicitly configured public research surrogate.
+
+    Each record MUST supply all 18 source-native features: T_Si, T_SiO2,
+    T_PolySi, Me, Mh, Emitter_Depth, Inner_Diffusion_Depth, Rs, Na_Top,
+    Nd_Rear, Dit_Si_SiOx, Dit_SiOx_Poly, Dit_Emitter, Cap_Area, Nt_top,
+    Nt_rear, Cap_Area_Defect, Taun_PolySi. Preserve the public CSV units;
+    do not map the old 13-feature solar schema or invent missing inputs.
+    Returns Vm/Im/Voc/Jsc/FF/Eff with source DOI, heldout metrics and domain
+    checks. Research-data surrogate, no new device experiments or full JV
+    prediction. Supports explicit parameter sweeps by passing complete rows.
+    中文：公开TOPCon太阳能电池单条/批量性能预测，必须完整提供源数据18字段。
+    """
+    try:
+        return {'text': configured_model().predict(inputs)}
+    except TopconUnavailable as error:
+        return {'text': {'status': 'unavailable', 'code': 'model_unavailable',
+                         'error': str(error)}}
+    except TopconDomainError as error:
+        return {'text': {'status': 'error', 'code': 'topcon_out_of_domain',
+                         'error': str(error)}}
+
 
 @mcp.tool()
 async def simulate_solar_cell(

@@ -35,7 +35,7 @@ python scripts/verify_local_lora_mcp.py --training-manifest <adapter-directory>/
 
 ## 仍需要外部资源的能力
 
-- 三个 AutoGluon 预测器目录仍缺失，硅电池单次/批量模拟与窄/宽带隙钙钛矿参数预测不能用通用语言模型补造。缺失时继续返回明确不可用，不输出假预测。
+- 三个原 AutoGluon 预测器目录仍缺失，旧接口继续明确不可用。已另行以作者 CC BY 4.0 的公开 TOPCon 数据训练数值森林，新增完整18字段单条/批量预测；278条同源留出测试 Eff MAE 0.255个百分点、Voc MAE 0.00437，实际MCP单条/批量与结果引用检查通过。来源、适用范围与未验证部分见 [公开TOPCon恢复](PUBLIC_TOPCON_RECOVERY.md)。此模型不等同于原13字段模型，不能用于钙钛矿。
 - 更大视觉模型和 MinerU 引擎的下载与验证由用户决定延后。
 - 未验证 vLLM、QLoRA、DPO 或分布式训练；它们不能由本次 CPU LoRA 实验替代。
 - 旧文件能证实的首轮历史任务成绩为 32/40；尚未找到 37/40 的可复核证据，不将它写为本轮成果。

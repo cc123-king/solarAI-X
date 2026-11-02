@@ -41,6 +41,7 @@ from tool_runtime import ToolExecutionPolicy, ToolResultError, execute_mcp_tool,
 from file_access import resolve_generated_file
 from execution_evidence import ExecutionEvidence, RUNTIME_INSTRUCTION, model_parameters
 from capabilities import get_rag_status
+from topcon_public import public_topcon_status
 from bandgap_baseline import BaselineDomainError
 from bandgap_utils import (
     BandgapParameters, BandgapModelUnavailable, get_bandgap_status, predict_bandgap,
@@ -1144,6 +1145,7 @@ async def health_check():
         "mcp_connected": mcp_client.session is not None,
         "rag": get_rag_status(),
         "models": get_model_status(),
+        "public_topcon": public_topcon_status(),
         "bandgap": get_bandgap_status(),
         "research_memory": {'available': True, 'scope': 'local_single_user',
                             'backend': 'local_semantic' if encoder else 'lexical'},

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "source_doi": "10.17632/s2vnyfgc4s.2",
+  "source_sha256": "14479b042a29137d107aa7198eea4d82ab2804177c2e583074bf674cb54287d2",
+  "split": "sha256 of canonical 18-feature row; first 8 hex digits modulo 100; train <70, development <85, test >=85",
+  "seed": 20261102,
+  "candidates": ["extra_trees_128_depth16_leaf2", "random_forest_128_depth16_leaf2"],
+  "selection": "lowest mean development MAE divided by training target standard deviation",
+  "final_fit": "train plus development; test used once, no tuning afterward",
+  "quality_gates": {
+    "min_test_rows": 200,
+    "max_each_target_mae_over_median_baseline": 0.8,
+    "max_eff_mae_percentage_points": 1.0,
+    "min_in_domain_test_coverage": 0.8
+  },
+  "domain": "all features within final training extrema; nearest normalized transformed training RMS distance <= 1.05 * training leave-one-out 99th percentile",
+  "transform": "log10 for positive features spanning >=100x in training; otherwise identity; fit on training only",
+  "scope": "single public TOPCon dataset; simulated/research labels, not new device experiments or original AutoGluon recovery"
+}

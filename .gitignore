@@ -94,6 +94,8 @@ outputs/
 models/solar/
 models/perovskite_narrow/
 models/perovskite_wide/
+models/topcon_public/
+*.npz
 
 web2/node_modules
 
