@@ -1,5 +1,7 @@
 # SolarAI-X
 
+新增跨会话偏好/案例记忆、可选本地语义路由、Prometheus 指标和 OpenTelemetry 追踪，并合入上下文预算与 CPU LoRA 工具链。操作、证据和效果边界见 [能力对应与复现](docs/RESUME_ALIGNMENT.md)。
+
 太阳能与钙钛矿领域工具应用：自然语言提问经OpenAI兼容模型与MCP编排，完成知识检索、带隙计算、仿真/预测及绘图，保存任务过程与生成结果。
 
 - 9个MCP工具、5类Gradio业务页面、FastAPI/SSE流式交互。

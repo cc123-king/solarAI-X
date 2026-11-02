@@ -1,0 +1,2 @@
+# Supply a local model directory; runtime never downloads weights.
+sentence-transformers>=3.4,<6

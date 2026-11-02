@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-02",
+  "scope": "local_engineering_and_fixture_checks",
+  "local_platform": "Windows",
+  "tests": 259,
+  "errors_failures_skips": 0,
+  "source_sha256": {
+    "api/main.py": "281585d432a3fedfac597ba70522856ab8f73e9413675e911f8b0762e6ec88e0",
+    "tests/test_agent_flow.py": "b9e1fba3274808421b335acae006fd95593e814e4731a56b91d3520c50941627",
+    "tests/test_async_stream.py": "cb5b9a27bc93bb2261bc6ef4ac07f872fb7cd18abc29e15f27a07267fc26ae26",
+    "api/context_budget.py": "38ae3049cee5021ac1d144af2e85dfe85e9a29bf7d3d3e511255383af7232960",
+    "api/research_memory.py": "f7177139fdb95e53fc93fd3e4d5d13b2aa6da27d1e92b677bd0bd382b755897a",
+    "api/runtime_telemetry.py": "f925d37ba3b448d3672827a106be8fee5c4d5801a3d746909eec0ea9aab5d3bf",
+    "api/tool_routing.py": "011118c83f8f4c1af9054ac169f6c381638755700522f7be3779852e069f3ffa",
+    "integration_tests/test_opentelemetry_spans.py": "8a8f48cc2033bf0f7e7bce6ab3185088f3ba1a22689cc121d0729eba309f3a48",
+    "scripts/demo_context_budget.py": "f1b9b2a1525bdb6542410b7fdeacffcd08b71c4736a307d8865fdb97bd75c012",
+    "scripts/serve_cpu_lora.py": "83e2692744132ba0d6d579336500dbb6e299095faab730591d9308b9b792b0a8",
+    "scripts/train_lora.py": "023e7ef961b3f773b8d69d5480dab27a9cf59bd15bde4d7a88ae054b69c04862",
+    "tests/test_context_budget.py": "a66674f60cab01e6739de0f9c8affea225658fd570fdd994d117323022b2d1ac",
+    "tests/test_cpu_service.py": "590c71c705e7afbcb307e349ecfe262f9fb492fb972a0b1471bdc8bbdf05135f",
+    "tests/test_research_memory_runtime.py": "f6a38b8e4a4781be0ac9bfc20b43394a2544d0a31fa4fbbbe4895f7c0d6250fb",
+    "tests/test_training_contracts.py": "379ecd1f3c9532dcc20509d1b9755a89c5ec2a50bda005ea1b96f139a200af01"
+  },
+  "paid_model_calls": 0,
+  "new_frozen_business_evaluation_completed": false,
+  "fresh_full_dependency_install_completed": false,
+  "local_mcp_contracts": {
+    "passed": 5,
+    "provider": "scripted"
+  },
+  "real_otel_sdk_in_memory_exporter": "PASS",
+  "real_semantic_encoder_quality": "NOT_RUN",
+  "training_in_this_round": false
+}
