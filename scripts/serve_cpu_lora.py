@@ -97,14 +97,13 @@ class CPURuntime:
             torch_dtype=torch.float32,
         )
         self.model = PeftModel.from_pretrained(
-            base, career_adapter, adapter_name="career-extract", is_trainable=False
+            base, solar_adapter, adapter_name="solar-tools", is_trainable=False
         )
-        self.model.load_adapter(
-            solar_adapter, adapter_name="solar-tools", is_trainable=False
-        )
+        if career_adapter is not None:
+            self.model.load_adapter(career_adapter, adapter_name="career-extract", is_trainable=False)
         self.model.eval()
         self.lock = Lock()
-        self.aliases = ["agent-base", "career-extract", "solar-tools"]
+        self.aliases = ["agent-base", "solar-tools"] + (["career-extract"] if career_adapter is not None else [])
         self.model_id = "Qwen/Qwen2.5-0.5B-Instruct"
 
     @contextmanager
@@ -325,13 +324,13 @@ def create_app(runtime):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-model", type=Path, required=True)
-    parser.add_argument("--career-adapter", type=Path, required=True)
+    parser.add_argument("--career-adapter", type=Path, help='Optional separate career project adapter')
     parser.add_argument("--solar-adapter", type=Path, required=True)
     parser.add_argument("--port", type=int, default=8018)
     parser.add_argument("--threads", type=int, default=4)
     args = parser.parse_args()
     for adapter in [args.career_adapter, args.solar_adapter]:
-        if not (adapter / "training_manifest.json").is_file():
+        if adapter is not None and not (adapter / "training_manifest.json").is_file():
             parser.error("Missing actual completed training manifest")
     import uvicorn
 

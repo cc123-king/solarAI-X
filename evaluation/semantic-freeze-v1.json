@@ -1,0 +1,6 @@
+{
+  "fixture_sha256": "76265fca549465afdbf1e925c5521eccef56304cfbc25f8fd4b33ec043971762",
+  "frozen_at": "2026-11-02T14:33:17.471485+00:00",
+  "used_for_training": false,
+  "attempt_policy": "one pass per mode; retain all failures; no post-result tuning"
+}

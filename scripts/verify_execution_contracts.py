@@ -5,6 +5,7 @@ No real LLM client is called. This validates contracts, never model quality.
 
 import argparse
 import asyncio
+import base64
 import json
 import os
 import sys
@@ -184,6 +185,23 @@ async def run(output):
             "completed",
             1,
         )
+        await scenario(
+            "model-empty-optional-row-labels-render",
+            [
+                {"tool": "draw_table", "arguments": {"table_data": [[7, 8], [11, 13]],
+                    "col_labels": ["A", "B"], "row_labels": []}},
+                {"final_from_tools": True},
+            ],
+            "completed",
+            1,
+        )
+        inline = await session.call_tool('draw_table', {'table_data': [[7, 8], [11, 13]],
+            'col_labels': ['A', 'B'], 'row_labels': [], 'save_file': False})
+        images = [item for item in inline.content if item.type == 'image']
+        checks = {'no_tool_error': not inline.isError, 'one_inline_png': len(images) == 1 and
+                  base64.b64decode(images[0].data).startswith(b'\x89PNG\r\n\x1a\n')}
+        rows.append({'scenario': 'inline-table-image-returned-over-real-mcp',
+                     'passed': all(checks.values()), 'checks': checks})
     summary = {
         "scope": "actual_local_mcp_with_scripted_provider",
         "paid_model_calls": 0,

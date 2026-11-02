@@ -1,0 +1,465 @@
+{
+  "scope": "new authored public-domain task descriptions; no training or tuning on results; small diagnostic set, not enterprise acceptance",
+  "fixture_sha256": "76265fca549465afdbf1e925c5521eccef56304cfbc25f8fd4b33ec043971762",
+  "encoder_receipt": {
+    "model_id": "sentence-transformers/all-MiniLM-L6-v2",
+    "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "files": {
+      "config.json": "953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41",
+      "config_sentence_transformers.json": "061ca9d39661d6c6d6de5ba27f79a1cd5770ea247f8d46412a68a498dc5ac9f3",
+      "data_config.json": "32edcb108fc2516b920734a862ae0692bcae1c5d45d5f8d972cb0d53434a4c54",
+      "model.safetensors": "53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db",
+      "modules.json": "84e40c8e006c9b1d6c122e02cba9b02458120b5fb0c87b746c41e0207cf642cf",
+      "sentence_bert_config.json": "fc1993fde0a95c24ec6c022539d41cf6e2f7c9721e5415d6fb6897472a9cd4b7",
+      "special_tokens_map.json": "303df45a03609e4ead04bc3dc1536d0ab19b5358db685b6f3da123d05ec200e3",
+      "tokenizer.json": "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037",
+      "tokenizer_config.json": "acb92769e8195aabd29b7b2137a9e6d6e25c476a4f15aa4355c233426c61576b",
+      "vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+      "1_Pooling/config.json": "4be450dde3b0273bb9787637cfbd28fe04a7ba6ab9d36ac48e92b11e350ffc23"
+    },
+    "license_review_source": "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2",
+    "paid_api_calls": 0
+  },
+  "source_hashes": {
+    "api/research_memory.py": "f7177139fdb95e53fc93fd3e4d5d13b2aa6da27d1e92b677bd0bd382b755897a",
+    "api/tool_routing.py": "011118c83f8f4c1af9054ac169f6c381638755700522f7be3779852e069f3ffa",
+    "api/mcpserver.py": "e75348bab2716854ba94d7a5ed36f56e6c69088d4088b5c87022042ed49009ca"
+  },
+  "registered_tools": [
+    "draw_curve",
+    "draw_table",
+    "simulate_solar_cell",
+    "batch_simulate_solar_cell",
+    "search_embedded_text",
+    "process_directory_for_embedding",
+    "predict_perovskite_aging",
+    "predict_perovskite_parameters",
+    "predict_perovskite_bandgap"
+  ],
+  "paid_api_calls": 0,
+  "rows": [
+    {
+      "id": "s01",
+      "mode": "lexical",
+      "memory_top1": "gap",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "all_no_match",
+        "registered": 9,
+        "selected": 9
+      }
+    },
+    {
+      "id": "s02",
+      "mode": "lexical",
+      "memory_top1": "aging",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "all_no_match",
+        "registered": 9,
+        "selected": 9
+      }
+    },
+    {
+      "id": "s03",
+      "mode": "lexical",
+      "memory_top1": "silicon",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "all_no_match",
+        "registered": 9,
+        "selected": 9
+      }
+    },
+    {
+      "id": "s04",
+      "mode": "lexical",
+      "memory_top1": "retrieval",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "all_no_match",
+        "registered": 9,
+        "selected": 9
+      }
+    },
+    {
+      "id": "s05",
+      "mode": "lexical",
+      "memory_top1": "plot",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "all_no_match",
+        "registered": 9,
+        "selected": 9
+      }
+    },
+    {
+      "id": "s06",
+      "mode": "lexical",
+      "memory_top1": "silicon",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "all_no_match",
+        "registered": 9,
+        "selected": 9
+      }
+    },
+    {
+      "id": "s07",
+      "mode": "lexical",
+      "memory_top1": "aging",
+      "memory_hit1": false,
+      "tool_hit": false,
+      "routing": {
+        "method": "lexical",
+        "registered": 9,
+        "selected": 6,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "batch_simulate_solar_cell",
+          "search_embedded_text",
+          "predict_perovskite_aging",
+          "predict_perovskite_parameters"
+        ]
+      }
+    },
+    {
+      "id": "s08",
+      "mode": "lexical",
+      "memory_top1": "aging",
+      "memory_hit1": true,
+      "tool_hit": false,
+      "routing": {
+        "method": "lexical",
+        "registered": 9,
+        "selected": 6,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "simulate_solar_cell",
+          "batch_simulate_solar_cell",
+          "search_embedded_text",
+          "predict_perovskite_parameters"
+        ]
+      }
+    },
+    {
+      "id": "s09",
+      "mode": "lexical",
+      "memory_top1": "aging",
+      "memory_hit1": false,
+      "tool_hit": true,
+      "routing": {
+        "method": "lexical",
+        "registered": 9,
+        "selected": 5,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "simulate_solar_cell",
+          "search_embedded_text",
+          "predict_perovskite_parameters"
+        ]
+      }
+    },
+    {
+      "id": "s10",
+      "mode": "lexical",
+      "memory_top1": "aging",
+      "memory_hit1": false,
+      "tool_hit": true,
+      "routing": {
+        "method": "lexical",
+        "registered": 9,
+        "selected": 5,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "search_embedded_text",
+          "process_directory_for_embedding",
+          "predict_perovskite_aging"
+        ]
+      }
+    },
+    {
+      "id": "s11",
+      "mode": "lexical",
+      "memory_top1": "aging",
+      "memory_hit1": false,
+      "tool_hit": true,
+      "routing": {
+        "method": "lexical",
+        "registered": 9,
+        "selected": 5,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "batch_simulate_solar_cell",
+          "search_embedded_text",
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "s12",
+      "mode": "lexical",
+      "memory_top1": "aging",
+      "memory_hit1": false,
+      "tool_hit": false,
+      "routing": {
+        "method": "lexical",
+        "registered": 9,
+        "selected": 3,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "search_embedded_text"
+        ]
+      }
+    },
+    {
+      "id": "s01",
+      "mode": "semantic",
+      "memory_top1": "gap",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 6,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "simulate_solar_cell",
+          "batch_simulate_solar_cell",
+          "search_embedded_text",
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "s02",
+      "mode": "semantic",
+      "memory_top1": "aging",
+      "memory_hit1": true,
+      "tool_hit": false,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 6,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "simulate_solar_cell",
+          "search_embedded_text",
+          "process_directory_for_embedding",
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "s03",
+      "mode": "semantic",
+      "memory_top1": "silicon",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 6,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "simulate_solar_cell",
+          "batch_simulate_solar_cell",
+          "search_embedded_text",
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "s04",
+      "mode": "semantic",
+      "memory_top1": "retrieval",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 5,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "search_embedded_text",
+          "process_directory_for_embedding",
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "s05",
+      "mode": "semantic",
+      "memory_top1": "plot",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 5,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "simulate_solar_cell",
+          "search_embedded_text",
+          "predict_perovskite_parameters"
+        ]
+      }
+    },
+    {
+      "id": "s06",
+      "mode": "semantic",
+      "memory_top1": "silicon",
+      "memory_hit1": true,
+      "tool_hit": true,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 6,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "simulate_solar_cell",
+          "batch_simulate_solar_cell",
+          "search_embedded_text",
+          "predict_perovskite_aging"
+        ]
+      }
+    },
+    {
+      "id": "s07",
+      "mode": "semantic",
+      "memory_top1": "plot",
+      "memory_hit1": false,
+      "tool_hit": true,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 4,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "search_embedded_text",
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "s08",
+      "mode": "semantic",
+      "memory_top1": "plot",
+      "memory_hit1": false,
+      "tool_hit": false,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 3,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "search_embedded_text"
+        ]
+      }
+    },
+    {
+      "id": "s09",
+      "mode": "semantic",
+      "memory_top1": "silicon",
+      "memory_hit1": true,
+      "tool_hit": false,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 3,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "search_embedded_text"
+        ]
+      }
+    },
+    {
+      "id": "s10",
+      "mode": "semantic",
+      "memory_top1": "plot",
+      "memory_hit1": false,
+      "tool_hit": true,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 4,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "search_embedded_text",
+          "process_directory_for_embedding"
+        ]
+      }
+    },
+    {
+      "id": "s11",
+      "mode": "semantic",
+      "memory_top1": "silicon",
+      "memory_hit1": false,
+      "tool_hit": true,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 4,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "search_embedded_text",
+          "predict_perovskite_bandgap"
+        ]
+      }
+    },
+    {
+      "id": "s12",
+      "mode": "semantic",
+      "memory_top1": "plot",
+      "memory_hit1": false,
+      "tool_hit": false,
+      "routing": {
+        "method": "semantic",
+        "registered": 9,
+        "selected": 3,
+        "names": [
+          "draw_curve",
+          "draw_table",
+          "search_embedded_text"
+        ]
+      }
+    }
+  ],
+  "metrics": {
+    "lexical": {
+      "cases": 12,
+      "memory_hit1": 0.5833333333333334,
+      "routing_recall": 0.75,
+      "mean_selected_tools": 7.0
+    },
+    "semantic": {
+      "cases": 12,
+      "memory_hit1": 0.5833333333333334,
+      "routing_recall": 0.6666666666666666,
+      "mean_selected_tools": 4.583333333333333
+    }
+  }
+}

@@ -14,6 +14,8 @@ TOOLS = {'draw_curve', 'draw_table', 'simulate_solar_cell', 'batch_simulate_sola
          'predict_perovskite_parameters', 'predict_perovskite_bandgap'}
 BOUNDS = (0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0)
 TRACE = ContextVar('solar_runtime_trace', default=None)
+FAILURES = {'timeout', 'invalid_json', 'invalid_arguments', 'schema', 'unauthorized_tool',
+            'tool_result', 'connection', 'model_stream', 'answer_validation', 'internal'}
 
 
 class RuntimeTelemetry:
@@ -32,6 +34,7 @@ class RuntimeTelemetry:
 
     def increment(self, name, label, value=1):
         allowed = {'tasks': {'completed', 'failed', 'cancelled'},
+                   'failures': {f'{stage}:{kind}' for stage in ['model', 'tool', 'protocol', 'answer'] for kind in FAILURES},
                    'model_calls': {'started', 'stream_completed', 'stream_failed'},
                    'tokens': {'input', 'output'}, 'usage_observations': {'reported'},
                    'tool_events': {f'{tool}:{kind}' for tool in TOOLS
@@ -54,6 +57,13 @@ class RuntimeTelemetry:
                     bins[i] += 1
             bins[-2] += 1
             bins[-1] += seconds
+
+    def failure(self, stage, kind):
+        """Only fixed labels, never exception messages, user IDs or argument values."""
+        self.increment('failures', f'{stage}:{kind}')
+        trace = TRACE.get()
+        if trace and trace.get('model_span'):
+            trace['model_span'].set_attribute('failure.category', kind)
 
     @contextmanager
     def task(self):

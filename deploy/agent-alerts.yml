@@ -15,3 +15,24 @@ groups:
           severity: warning
         annotations:
           summary: Agent task P95 exceeds thirty seconds
+      - alert: SolarAgentTimeouts
+        expr: sum(rate(solar_failures_total{kind=~"tool:timeout|model:timeout"}[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Agent model or tool timeouts are sustained
+      - alert: SolarAgentInvalidCalls
+        expr: sum(rate(solar_failures_total{kind=~"protocol:invalid_json|protocol:invalid_arguments|tool:schema|tool:unauthorized_tool"}[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Agent generated invalid or unauthorized tool calls
+      - alert: SolarAgentAnswerRejected
+        expr: sum(rate(solar_failures_total{kind="answer:answer_validation"}[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Agent final answers repeatedly fail execution evidence validation

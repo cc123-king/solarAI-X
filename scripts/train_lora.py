@@ -104,6 +104,7 @@ def main():
     parser.add_argument("--output", type=Path)
     parser.add_argument("--max-length", type=int, default=2048)
     parser.add_argument("--max-steps", type=int, default=-1)
+    parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--allow-cpu", action="store_true")
     args = parser.parse_args()
@@ -138,6 +139,11 @@ def main():
         TrainingArguments,
     )
     from peft import LoraConfig, get_peft_model
+
+    if not 1 <= args.threads <= 16:
+        parser.error('CPU threads must be between 1 and 16')
+    torch.set_num_threads(args.threads)
+    torch.set_num_interop_threads(1)
 
     if not torch.cuda.is_available() and not args.allow_cpu:
         parser.error("当前PyTorch没有可用CUDA/ROCm设备；小模型CPU试跑需显式--allow-cpu")
@@ -237,6 +243,10 @@ def main():
             for name in ["torch", "transformers", "peft", "accelerate"]
         },
         heldout_agent_evaluation_completed=False,
+        cpu_threads=args.threads,
+        adapter_sha256=hashlib.sha256((args.output / 'adapter_model.safetensors').read_bytes()).hexdigest(),
+        base_download_receipt=json.loads((args.model / 'download-receipt.json').read_text(encoding='utf-8'))
+            if (args.model / 'download-receipt.json').is_file() else None,
     )
     (args.output / "training_manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"

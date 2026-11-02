@@ -37,7 +37,7 @@ from mlutil import (
     predict_perovskite_params_ml,
 )
 from aging_utils import predict_aging_curve, get_default_aging_params
-from tool_runtime import ToolExecutionPolicy, ToolResultError, execute_mcp_tool, validate_tool_arguments, tool_result_payload
+from tool_runtime import ToolExecutionPolicy, ToolResultError, execute_mcp_tool, validate_tool_arguments, tool_result_payload, failure_category
 from file_access import resolve_generated_file
 from execution_evidence import ExecutionEvidence, RUNTIME_INSTRUCTION, model_parameters
 from capabilities import get_rag_status
@@ -324,6 +324,13 @@ class MCPClient:
             return False
             
     async def call_tool(self, tool_name: str, arguments: Dict[str, Any]):
+        try:
+            return await self._call_tool_unobserved(tool_name, arguments)
+        except Exception as error:
+            telemetry.failure('tool', failure_category(error))
+            raise
+
+    async def _call_tool_unobserved(self, tool_name: str, arguments: Dict[str, Any]):
         """调用MCP工具"""
         if not self.session:
             raise ValueError("MCP会话未初始化，请先调用connect()")
@@ -727,9 +734,11 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                         try:
                             arguments = json.loads(arguments_str)
                         except json.JSONDecodeError:
+                            telemetry.failure('protocol', 'invalid_json')
                             logger.warning("tool_arguments_rejected code=invalid_tool_arguments_json")
                             raise ValueError("invalid_tool_arguments_json") from None
                         if not isinstance(arguments, dict):
+                            telemetry.failure('protocol', 'invalid_arguments')
                             raise ValueError("invalid_tool_arguments_object")
                         
                         logger.info(f"模型请求调用工具: {tool_name}，参数: {arguments}")
@@ -983,6 +992,7 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                     try:
                         execution.validate_answer(current_content)
                     except (ValueError, OSError, PermissionError) as error:
+                        telemetry.failure('answer', 'answer_validation')
                         task_id = _task_context.get()
                         if task_id:
                             state_store.event(task_id, "answer_rejected", {"code": str(error) if isinstance(error, ValueError) else "artifact_file_unavailable"})
@@ -992,6 +1002,9 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                 break
                 
             except Exception as e:
+                if not model_finished:
+                    category = failure_category(e)
+                    telemetry.failure('model', category if category != 'internal' else 'model_stream')
                 error_msg = f"处理请求时出错: {str(e)}"
                 logger.info(error_msg)
                 yield f"data: {json.dumps({'type': 'error', 'content': error_msg})}\n\n"

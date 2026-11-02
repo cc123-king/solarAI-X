@@ -1,0 +1,242 @@
+{
+  "scope": "new diagnostic prompts, four-tool catalog, one model call then real MCP execution; too small for generalized fine-tuning benefit",
+  "fixture_sha256": "8ba04bfa8be8a4ccfe143368408223135a6fb7f09496e7b4fd2a24c6089af27c",
+  "raw_report_sha256": "42c4ab878578505bac30f16040505a9a70aa0edd5d79cda8d090aa8ee825521c",
+  "summary": {
+    "agent-base": {
+      "valid_tool_call": 4,
+      "expected_call": 4,
+      "real_mcp_execution_passed": 3
+    },
+    "solar-tools": {
+      "valid_tool_call": 4,
+      "expected_call": 4,
+      "real_mcp_execution_passed": 4
+    }
+  },
+  "rows": [
+    {
+      "id": "l01",
+      "model": "agent-base",
+      "http_status": 200,
+      "valid_tool_call": true,
+      "expected_call": true,
+      "real_mcp_execution_passed": true,
+      "generated_calls": [
+        {
+          "name": "draw_curve",
+          "arguments": "{\"x_data\": [2, 4], \"y_data\": [5, 9], \"x_label\": \"X Axis\", \"y_label\": \"Y Axis\", \"title\": \"Curve Plot\", \"line_style\": \"-\", \"color\": \"blue\", \"fig_size\": [10, 6], \"save_file\": false}"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1627,
+        "completion_tokens": 85,
+        "total_tokens": 1712
+      },
+      "verification": {
+        "engine": "transformers-peft-cpu",
+        "engine_ms": 19734.567,
+        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "adapter": null,
+        "json_grammar_enforced": false,
+        "streaming": "buffered_sse"
+      }
+    },
+    {
+      "id": "l02",
+      "model": "agent-base",
+      "http_status": 200,
+      "valid_tool_call": true,
+      "expected_call": true,
+      "real_mcp_execution_passed": false,
+      "generated_calls": [
+        {
+          "name": "draw_table",
+          "arguments": "{\"table_data\": [[7, 8], [11, 13]], \"col_labels\": [\"A\", \"B\"], \"row_labels\": [], \"title\": \"Table\", \"fig_size\": [10, 6], \"save_file\": false}"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1635,
+        "completion_tokens": 70,
+        "total_tokens": 1705
+      },
+      "verification": {
+        "engine": "transformers-peft-cpu",
+        "engine_ms": 17686.754,
+        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "adapter": null,
+        "json_grammar_enforced": false,
+        "streaming": "buffered_sse"
+      }
+    },
+    {
+      "id": "l03",
+      "model": "agent-base",
+      "http_status": 200,
+      "valid_tool_call": true,
+      "expected_call": true,
+      "real_mcp_execution_passed": true,
+      "generated_calls": [
+        {
+          "name": "predict_perovskite_bandgap",
+          "arguments": "{\"perovskite_type\": \"MAPbIBr\", \"Br_percentage\": 0.23, \"method\": \"formula\"}"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1637,
+        "completion_tokens": 48,
+        "total_tokens": 1685
+      },
+      "verification": {
+        "engine": "transformers-peft-cpu",
+        "engine_ms": 15722.48,
+        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "adapter": null,
+        "json_grammar_enforced": false,
+        "streaming": "buffered_sse"
+      }
+    },
+    {
+      "id": "l04",
+      "model": "agent-base",
+      "http_status": 200,
+      "valid_tool_call": true,
+      "expected_call": true,
+      "real_mcp_execution_passed": true,
+      "generated_calls": [
+        {
+          "name": "search_embedded_text",
+          "arguments": "{\"query\": \"bandgap\", \"top_n\": 2}"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1634,
+        "completion_tokens": 30,
+        "total_tokens": 1664
+      },
+      "verification": {
+        "engine": "transformers-peft-cpu",
+        "engine_ms": 13847.012,
+        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "adapter": null,
+        "json_grammar_enforced": false,
+        "streaming": "buffered_sse"
+      }
+    },
+    {
+      "id": "l01",
+      "model": "solar-tools",
+      "http_status": 200,
+      "valid_tool_call": true,
+      "expected_call": true,
+      "real_mcp_execution_passed": true,
+      "generated_calls": [
+        {
+          "name": "draw_curve",
+          "arguments": "{\"x_data\": [2, 4], \"y_data\": [5, 9], \"title\": \"Custom Curve Plot\"}"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1627,
+        "completion_tokens": 42,
+        "total_tokens": 1669
+      },
+      "verification": {
+        "engine": "transformers-peft-cpu",
+        "engine_ms": 15383.844,
+        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "adapter": "solar-tools",
+        "json_grammar_enforced": false,
+        "streaming": "buffered_sse"
+      }
+    },
+    {
+      "id": "l02",
+      "model": "solar-tools",
+      "http_status": 200,
+      "valid_tool_call": true,
+      "expected_call": true,
+      "real_mcp_execution_passed": true,
+      "generated_calls": [
+        {
+          "name": "draw_table",
+          "arguments": "{\"table_data\": [[7, 8], [11, 13]], \"col_labels\": [\"A\", \"B\"], \"title\": \"Table\", \"save_file\": false}"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1635,
+        "completion_tokens": 54,
+        "total_tokens": 1689
+      },
+      "verification": {
+        "engine": "transformers-peft-cpu",
+        "engine_ms": 16962.586,
+        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "adapter": "solar-tools",
+        "json_grammar_enforced": false,
+        "streaming": "buffered_sse"
+      }
+    },
+    {
+      "id": "l03",
+      "model": "solar-tools",
+      "http_status": 200,
+      "valid_tool_call": true,
+      "expected_call": true,
+      "real_mcp_execution_passed": true,
+      "generated_calls": [
+        {
+          "name": "predict_perovskite_bandgap",
+          "arguments": "{\"perovskite_type\": \"MAPbIBr\", \"Br_percentage\": 0.23, \"method\": \"formula\"}"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1637,
+        "completion_tokens": 48,
+        "total_tokens": 1685
+      },
+      "verification": {
+        "engine": "transformers-peft-cpu",
+        "engine_ms": 16086.014,
+        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "adapter": "solar-tools",
+        "json_grammar_enforced": false,
+        "streaming": "buffered_sse"
+      }
+    },
+    {
+      "id": "l04",
+      "model": "solar-tools",
+      "http_status": 200,
+      "valid_tool_call": true,
+      "expected_call": true,
+      "real_mcp_execution_passed": true,
+      "generated_calls": [
+        {
+          "name": "search_embedded_text",
+          "arguments": "{\"query\": \"bandgap\", \"top_n\": 2}"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 1634,
+        "completion_tokens": 30,
+        "total_tokens": 1664
+      },
+      "verification": {
+        "engine": "transformers-peft-cpu",
+        "engine_ms": 13718.05,
+        "base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+        "adapter": "solar-tools",
+        "json_grammar_enforced": false,
+        "streaming": "buffered_sse"
+      }
+    }
+  ],
+  "measured_before_plot_contract_fix": true,
+  "execution_metric": "MCP returned no explicit tool error; this did not check inline PNG delivery",
+  "subsequent_fix": "empty optional labels use defaults; save_file=false returns actual inline MCP ImageContent",
+  "paid_api_calls": 0,
+  "model_http_calls": 8,
+  "trained_model_quality_generalization_claim": false,
+  "adapter_sha256": "ea3ba0595e074e83c11254f25e11a9ddcbbd3102590fffe200e7786c7b507701"
+}

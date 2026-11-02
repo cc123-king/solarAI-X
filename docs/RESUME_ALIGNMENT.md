@@ -7,8 +7,8 @@
 | 上下文 | 固定当前问题、工具轨迹和服务端记忆，整轮裁剪旧对话，完整数值从原执行账本引用 | 预算单位为 JSON 字符；未解析 JSON 和非对象参数提前拒绝 |
 | 分层记忆 | SQLite 显式偏好/确认案例，版本 CAS、TTL、删除、命名空间及独立预算；测试核对实际模型输入 | 默认词法召回。删除清空当前记录，非磁盘取证级擦除；项目仍是本机单用户，命名空间不替代认证 |
 | 工具路由 | 只从注册 MCP 工具选择，保留检索/绘图依赖并记录方法与数量 | 默认 `SOLAR_TOOL_ROUTING=all`；`lexical` 可直接演示。`semantic` 要求本地 encoder，不以关键词冒充语义；无新的成功率提升结论 |
-| 可观测性 | `/api/metrics` 提供任务、模型、工具、usage 和延迟直方图；OpenTelemetry task/model/tool 同一 trace | 默认不外传正文、记忆、参数和异常原文。只有 provider 上报 usage 才计 token；缺失不代表零成本。真实 SDK 内存 exporter 独立测试 |
-| LoRA | 助手响应损失掩码、分组清单校验、本地 PEFT、CPU API、输出/忙时限制及 Schema 验证 | 合入代码与作者构造的 12/4 条种子，不上传权重；未重新训练，不将历史四条模板样例当泛化收益，vLLM 未验证 |
+| 可观测性 | `/api/metrics` 提供任务、模型、工具、usage、延迟和固定错误类别；OpenTelemetry task/model/tool 同一 trace | 默认不外传正文、记忆、参数和异常原文。只有 provider 上报 usage 才计 token；缺失不代表零成本。真实 collector、Prometheus 规则触发/恢复由独立 Linux CI 实验验证，企业后端尚未接入 |
+| LoRA | 助手响应损失掩码、分组清单校验、真实 Qwen2.5-0.5B CPU PEFT 训练、适配器重载、HTTP API 与实际 MCP 调用 | 12/4 条作者构造种子，3 个训练步骤。四条新冻结探针仅验证小样本；不上传权重，不将 loss 或四条结果当泛化收益，vLLM 未验证 |
 
 ## 演示与配置
 
@@ -22,7 +22,7 @@
 
 通过 `GET /api/memory` 查看。新会话会注入偏好；`DELETE /api/memory/preference/units?expected_version=1` 后下一次输入不再出现。系统不自动把未审核模型回答保存成长期事实。
 
-可选语义模式安装 `requirements-semantic-memory.txt`，设置 `SOLAR_ENCODER_PATH` 为已有 SentenceTransformer 目录、`SOLAR_TOOL_ROUTING=semantic`。只加载本地文件，缺失配置报错，不自动下载/调用云模型。当前语义单测使用确定性 encoder，只证明接线，未验证真实 embedding 效果。
+可选语义模式安装 `requirements-semantic-memory.txt`，设置 `SOLAR_ENCODER_PATH` 为已有 SentenceTransformer 目录、`SOLAR_TOOL_ROUTING=semantic`。只加载本地文件，缺失配置报错，不自动下载/调用云模型。第二轮真实 all-MiniLM-L6-v2 的 12 条冻结中英文诊断：记忆 Hit@1 与词法同为 7/12，工具保留召回为 8/12，低于词法 9/12；保留失败，因此不提升为默认策略。方法和证据见 [本地模型验证](LOCAL_MODEL_VALIDATION.md)。
 
 Prometheus 抓取 `/api/metrics`，用 `solar_duration_seconds_bucket` 计算 P95，比较 model calls 与 usage observations 看 token 覆盖率。告警样例位于 `deploy/agent-alerts.yml`；企业监控尚未接入。
 

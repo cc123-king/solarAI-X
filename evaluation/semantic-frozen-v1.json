@@ -1,0 +1,24 @@
+{
+  "scope": "new authored public-domain task descriptions; no training or tuning on results; small diagnostic set, not enterprise acceptance",
+  "memory": [
+    {"id":"gap","text":"Energy bandgap prediction uses halide bromine fraction and reports electron volts."},
+    {"id":"aging","text":"Device degradation stability tracks remaining efficiency over hours under heat and humidity."},
+    {"id":"silicon","text":"Silicon cell simulation estimates current voltage performance using wafer thickness and doping concentration."},
+    {"id":"retrieval","text":"Literature evidence lookup returns passages from locally indexed scientific papers."},
+    {"id":"plot","text":"Graphs visualize measured values as line curves; tables organize numerical observations."}
+  ],
+  "cases": [
+    {"id":"s01","query":"Estimate the electronic energy gap after increasing bromide content.","memory":"gap","tool":"predict_perovskite_bandgap"},
+    {"id":"s02","query":"How much conversion efficiency remains after prolonged humid storage?","memory":"aging","tool":"predict_perovskite_aging"},
+    {"id":"s03","query":"Evaluate a doped silicon wafer photovoltaic device.","memory":"silicon","tool":"simulate_solar_cell"},
+    {"id":"s04","query":"Find supporting passages in the local research library.","memory":"retrieval","tool":"search_embedded_text"},
+    {"id":"s05","query":"Render a line graph from these measured observations.","memory":"plot","tool":"draw_curve"},
+    {"id":"s06","query":"Compare several silicon thickness settings in one simulation sweep.","memory":"silicon","tool":"batch_simulate_solar_cell"},
+    {"id":"s07","query":"溴比例改变后，估算钙钛矿的禁带宽度。","memory":"gap","tool":"predict_perovskite_bandgap"},
+    {"id":"s08","query":"湿热放置一千小时后，器件还能保留多少效率？","memory":"aging","tool":"predict_perovskite_aging"},
+    {"id":"s09","query":"根据掺杂浓度和硅片厚度模拟电池表现。","memory":"silicon","tool":"simulate_solar_cell"},
+    {"id":"s10","query":"在已有论文里查找支撑这个结论的段落。","memory":"retrieval","tool":"search_embedded_text"},
+    {"id":"s11","query":"把实验数值整理为表格。","memory":"plot","tool":"draw_table"},
+    {"id":"s12","query":"把一批本地论文建立检索索引。","memory":"retrieval","tool":"process_directory_for_embedding"}
+  ]
+}

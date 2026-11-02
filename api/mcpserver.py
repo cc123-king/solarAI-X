@@ -11,6 +11,7 @@ for _thread_variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THR
     os.environ.setdefault(_thread_variable, "1")
 
 import base64
+import json
 import math
 import io
 from typing import Annotated, Dict, Any, List, Tuple, Optional, Literal
@@ -29,6 +30,7 @@ except ImportError:
     TabularPredictor = None
     TabularDataset = None
 from mcp.server.fastmcp import FastMCP, Context, Image
+from mcp.types import CallToolResult, TextContent
 from starlette.applications import Starlette
 from mcp.server.sse import SseServerTransport
 from starlette.requests import Request
@@ -130,6 +132,13 @@ def fig_to_image(fig: Figure) -> Image:
     img_data = buf.getvalue()
     return Image(data=img_data, format="png")
 
+
+def plot_response(result: dict, image: Image, save_file: bool) -> Any:
+    if save_file:
+        return result
+    return CallToolResult(content=[image.to_image_content(),
+        TextContent(type='text', text=json.dumps(result['text']))], structuredContent=result)
+
 @mcp.tool()
 async def draw_curve(
     x_data: list,         # x轴数据列表
@@ -142,7 +151,7 @@ async def draw_curve(
     fig_size: list = [10, 6], # 图表尺寸 [宽, 高]
     save_file: bool = True, # 是否保存为文件
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> Any:
     """
     绘制自定义曲线图
     
@@ -216,7 +225,7 @@ async def draw_curve(
     result["text"] = {}
     result["text"]["file_path"] = file_path
     
-    return result
+    return plot_response(result, curve_image, save_file)
 
 @mcp.tool()
 async def draw_table(
@@ -227,7 +236,7 @@ async def draw_table(
     fig_size: list = [10, 6], # 图表尺寸 [宽, 高]
     save_file: bool = True,  # 是否保存为文件
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> Any:
     """
     绘制数据表格
     
@@ -264,11 +273,11 @@ async def draw_table(
     num_rows = len(table_data)
     num_cols = len(table_data[0]) if num_rows > 0 else 0
     
-    if col_labels is None:
-        col_labels = [f"列 {i+1}" for i in range(num_cols)]
+    if col_labels is None or col_labels == []:
+        col_labels = [f"Column {i+1}" for i in range(num_cols)]
     
-    if row_labels is None:
-        row_labels = [f"行 {i+1}" for i in range(num_rows)]
+    if row_labels is None or row_labels == []:
+        row_labels = [f"Row {i+1}" for i in range(num_rows)]
     
     # 创建图形和表格
     fig, ax = plt.subplots(figsize=(fig_size[0], fig_size[1]))
@@ -327,7 +336,7 @@ async def draw_table(
     result["text"] = {}
     result["text"]["file_path"] = file_path
     
-    return result
+    return plot_response(result, table_image, save_file)
 
 @mcp.tool()
 async def simulate_solar_cell(
