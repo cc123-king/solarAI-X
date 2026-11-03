@@ -1,4 +1,5 @@
 import gradio as gr
+from ui.memory import build_memory_controls
 from api.chat import (
     send_message, create_conversation, update_model, select_conversation, get_available_models, get_conversation_choices
 )
@@ -45,6 +46,7 @@ def build_chat_tab():
                 )
                 load_btn = gr.Button("加载对话")
                 refresh_btn = gr.Button("刷新列表")
+            build_memory_controls()
 
     # 创建包装函数来清空输入框
     def send_and_clear(message, chatbot):

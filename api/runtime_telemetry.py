@@ -11,7 +11,7 @@ from uuid import uuid4
 
 TOOLS = {'draw_curve', 'draw_table', 'simulate_solar_cell', 'batch_simulate_solar_cell',
          'search_embedded_text', 'process_directory_for_embedding', 'predict_perovskite_aging',
-         'predict_perovskite_parameters', 'predict_perovskite_bandgap'}
+         'predict_perovskite_parameters', 'predict_perovskite_bandgap', 'predict_topcon_public'}
 BOUNDS = (0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0)
 TRACE = ContextVar('solar_runtime_trace', default=None)
 FAILURES = {'timeout', 'invalid_json', 'invalid_arguments', 'schema', 'unauthorized_tool',

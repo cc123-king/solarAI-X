@@ -107,3 +107,6 @@ reports/resume-upgrade-tests.xml
 reports/otel-tests.xml
 /evaluation/fixtures_v6/index/
 /reports/gaps-local-tests.xml
+
+# Isolated local launcher state and logs
+/.local/

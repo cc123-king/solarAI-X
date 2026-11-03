@@ -502,6 +502,17 @@ async def list_research_memory():
     return await asyncio.to_thread(research_memory.list)
 
 
+@app.get('/api/memory/recall')
+async def preview_research_memory(query: str = Query(min_length=1, max_length=4000),
+                                  max_chars: int = Query(default=4000, ge=256, le=8000)):
+    return await asyncio.to_thread(research_memory.recall, query, max_chars)
+
+
+@app.get('/api/memory/entry')
+async def research_memory_entry(kind: Literal['preference', 'case'], key: str = Query(min_length=1, max_length=80)):
+    return await asyncio.to_thread(research_memory.entry, kind, key)
+
+
 @app.put('/api/memory')
 async def remember_research_memory(item: ResearchMemoryInput):
     try:
@@ -512,7 +523,7 @@ async def remember_research_memory(item: ResearchMemoryInput):
         raise HTTPException(422, str(error)) from error
 
 
-@app.delete('/api/memory/{kind}/{key}')
+@app.delete('/api/memory/{kind}/{key:path}')
 async def forget_research_memory(kind: str, key: str, expected_version: int = Query(ge=1)):
     try:
         return await asyncio.to_thread(research_memory.forget, kind, key, expected_version)

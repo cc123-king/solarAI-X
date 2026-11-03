@@ -1,5 +1,7 @@
 # SolarAI-X
 
+已接入聊天侧栏的长期记忆管理与召回预览，并新增本地 Qwen/LoRA、MCP、API、Gradio 的统一启动器。操作与配置见 [集成使用流程](docs/INTEGRATED_WORKFLOWS.md)。本轮按要求先集成功能，真实运行、全量回归和质量验收后置；以下旧成绩均属于相应历史版本。
+
 新增跨会话偏好/案例记忆、可选本地语义路由、Prometheus 指标和 OpenTelemetry 追踪，并合入上下文预算与 CPU LoRA 工具链。操作、证据和效果边界见 [能力对应与复现](docs/RESUME_ALIGNMENT.md)。
 
 太阳能与钙钛矿领域工具应用：自然语言提问经OpenAI兼容模型与MCP编排，完成知识检索、带隙计算、仿真/预测及绘图，保存任务过程与生成结果。

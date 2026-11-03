@@ -127,6 +127,21 @@ class ResearchMemory:
                 FROM research_memory WHERE namespace=? AND deleted=0 AND expires>?
                 ORDER BY updated DESC LIMIT 256''', (self.namespace, self.clock()))]
 
+    def entry(self, kind, key):
+        """Expose the current CAS revision, including expired/deleted keys."""
+        with self.connect() as db:
+            row = db.execute('''SELECT kind,key,value,source,version,expires,deleted
+                FROM research_memory WHERE namespace=? AND kind=? AND key=?''',
+                (self.namespace, kind, key)).fetchone()
+        if row is None:
+            return {'kind': kind, 'key': key, 'version': 0, 'status': 'new'}
+        result = dict(row)
+        result['status'] = 'deleted' if result.pop('deleted') else ('expired' if result['expires'] <= self.clock() else 'active')
+        if result['status'] != 'active':
+            result.pop('value')
+            result.pop('source')
+        return result
+
     def forget(self, kind, key, expected_version):
         with self.connect() as db:
             result = db.execute('''UPDATE research_memory SET deleted=1,value='',source='',version=version+1

@@ -1,0 +1,34 @@
+{
+  "created_at": "2026-11-03T13:37:20.691081+00:00",
+  "scope": "feature_integration_static_checks_only",
+  "parent_commit": "713467909688463325724525391456c989d65a4a",
+  "priority": "integrate_resume_features_first_defer_runtime_tests",
+  "static_checks": {
+    "python_syntax": [
+      "api/main.py",
+      "api/research_memory.py",
+      "api/runtime_telemetry.py",
+      "scripts/run_local_stack.py",
+      "web/api/memory.py",
+      "web/ui/chat.py",
+      "web/ui/memory.py"
+    ],
+    "ruff": "passed_for_changed_nonlegacy_python",
+    "diff_check": "passed",
+    "new_sensitive_content_scan": "passed"
+  },
+  "new_runtime_tests": 0,
+  "new_model_evaluations": 0,
+  "paid_model_calls": 0,
+  "source_sha256_lf": {
+    "api/main.py": "dbb6ca863b15c74525406469d10b4b936b93e02f5007e24b0684bd3bddbfce56",
+    "api/research_memory.py": "ffeb9e0f6b0efd55f559fbda7e8fd7924215a58b0440b9219ac54441bb9bf405",
+    "api/runtime_telemetry.py": "0a15dae1cd78eed983c8b124caaa0d887ec57eaed24f627acf318bd8d573608d",
+    "scripts/run_local_stack.py": "6f9d2fa55ef9a849d309cc62dbe80a8c90ebcd7efb4c0b7bfb89aba71c4b1a9b",
+    "web/api/memory.py": "54a3ad43357813acf71aab753eceaf7ead1d6dbb29399728ff295130ed9e1f31",
+    "web/ui/chat.py": "745a52ecb5a22ad4d9ed20d773e1daa78fa99473f09325363cc5326e6ef6b600",
+    "web/ui/memory.py": "8a5eba006e2f96531b99cb597d47ed60f965d9b59c709b4888e6c19139a675a4"
+  },
+  "business_release_status": "RELEASE_GATES_NOT_MET",
+  "runtime_verification": "deferred_by_user_request"
+}
