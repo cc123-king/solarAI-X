@@ -13,6 +13,31 @@
 
 依赖工具固定保留会提高路由召回，因此这个指标不能等同于模型选工具成功率。英文小模型在混合语言样本上没有测出优势；语义能力有真实运行证据，质量提升仍未达到目标。后续应选合适的中英文模型与新的未见问题，不能反复把这 12 条当独立验收。
 
+### 多语言 E5 的新冻结诊断
+
+用户另外批准下载 `intfloat/multilingual-e5-small`，固定版本 `614241f622f53c4eeff9890bdc4f31cfecc418b3`，MIT。权重、缓存、下载回执均放用户指定的 D 盘，仓库只保存哈希与结果。`LocalEncoder(profile='e5')` 明确区分 `query: ` 与 `passage: `；默认 `symmetric` 保持原协议。运行时仅加载本地模型。最多 512 个向量的缓存以 SHA-256 为键，不保留查询/记忆原文，并串行保护模型与缓存，避免并发淘汰产生缺失向量。
+
+`evaluation/semantic-frozen-v2.json` 在首次测量前冻结为 36 条新编写意图（中文25、英文11；含6条工具组合），使用8条显式研究记忆和真实 MCP 当前10工具目录。每模式只测一次，未按结果调整题目、路由或阈值；原 v1 和本轮失败都保留。报告 `reports/semantic-memory-v2.json`：
+
+| 方法 | 记忆首条命中 | 任务所需工具全部保留 | 所需工具逐项召回 | 平均保留工具数 |
+|---|---:|---:|---:|---:|
+| 词法 | 11/36 | 29/36 | 35/42 | 5.61/10 |
+| MiniLM | 10/36 | 16/36 | 22/42 | 4.17/10 |
+| multilingual E5 | 31/36 | 34/36 | 40/42 | 5.61/10 |
+
+E5 中文工具完整保留25/25，英文9/11；记忆分别21/25、10/11。缓存开启时，记忆召回加路由的本机中位耗时31.83 ms、P95 40.28 ms，另计模型加载。计时来自这台 CPU 和这组小数据，不能代替服务负载或生产延迟验收。5条记忆误选和2条工具遗漏仍在报告中，不修题刷成绩。绘图/检索依赖固定保留，所以不能把工具保留率当真实 LLM 自由选工具成功率。E5 的拒绝阈值尚未校准，未测试无关问题误召回；默认仍为全目录模式，显式研究演示可开启 E5。
+
+```powershell
+python scripts/evaluate_semantic_memory_v2.py --minilm <local-minilm> --e5 <local-e5> --output <new-report.json>
+python scripts/verify_encoder_api.py --encoder <local-e5> --output <new-api-report.json>
+$env:SOLAR_ENCODER_PATH = '<local-e5>'
+$env:SOLAR_ENCODER_PROFILE = 'e5'
+$env:SOLAR_TOOL_ROUTING = 'semantic'
+python -m uvicorn main:app --app-dir api --host 127.0.0.1 --port 19019
+```
+
+API 验证脚本使用真正应用处理器、独立临时数据库和真实 E5，核对存储、跨语言召回、重新打开数据库和删除；采用进程内 ASGI HTTP，不连接共享 MCP 或云模型，不代表外部网络部署验收。
+
 ## 实际训练、重载和工具调用
 
 `reports/local-lora-training-v1.json` 记录真实 CPU 训练：Qwen2.5-0.5B-Instruct 的精确下载版本、基座权重 SHA256、LoRA 参数、适配器 SHA256、12 条训练种子、4 条训练验证、3 步训练和约 515 秒训练运行时间（含训练器的轮末评估，另有一次最终评估）。验证 loss 约 0.00985；它是助手 token 上的 teacher-forced loss，不是任务成功率。种子规模不足以得出泛化收益。

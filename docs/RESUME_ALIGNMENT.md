@@ -25,6 +25,8 @@
 
 可选语义模式安装 `requirements-semantic-memory.txt`，设置 `SOLAR_ENCODER_PATH` 为已有 SentenceTransformer 目录、`SOLAR_TOOL_ROUTING=semantic`。只加载本地文件，缺失配置报错，不自动下载/调用云模型。第二轮真实 all-MiniLM-L6-v2 的 12 条冻结中英文诊断：记忆 Hit@1 与词法同为 7/12，工具保留召回为 8/12，低于词法 9/12；保留失败，因此不提升为默认策略。方法和证据见 [本地模型验证](LOCAL_MODEL_VALIDATION.md)。
 
+新增显式 `SOLAR_ENCODER_PROFILE=e5` 支持多语言检索模型的查询/文档前缀，并缓存有界向量。另行授权下载到 D 盘的 multilingual-e5-small 已完成新的36条冻结诊断：记忆31/36，完整保留所需工具34/36；词法分别11/36、29/36，原 MiniLM 分别10/36、16/36。平均保留5.61/10个工具。它是本组显式记忆与工具目录诊断，尚非模型自由选工具或企业问答通过率。保留5条记忆错误、2条工具遗漏；默认模式不变，演示配置与实际API验证命令见上述文档。
+
 Prometheus 抓取 `/api/metrics`，用 `solar_duration_seconds_bucket` 计算 P95，比较 model calls 与 usage observations 看 token 覆盖率。告警样例位于 `deploy/agent-alerts.yml`；企业监控尚未接入。
 
 可选安装 `requirements-observability.txt` 并设置 `SOLAR_OTLP_ENDPOINT=http://127.0.0.1:4318/v1/traces` 才启用 exporter。兼容性不足的模型服务可设置 `LLM_STREAM_USAGE=false`。

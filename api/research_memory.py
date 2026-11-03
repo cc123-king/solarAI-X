@@ -1,13 +1,16 @@
 """Explicit long-term research hints for the local, single-user workbench."""
 
+import hashlib
 import json
 import math
 import re
 import sqlite3
 import time
+from collections import OrderedDict
 from contextlib import contextmanager
 from importlib import import_module
 from pathlib import Path
+from threading import Lock
 
 
 class MemoryConflict(ValueError):
@@ -23,21 +26,49 @@ def terms(text):
 class LocalEncoder:
     """An explicitly configured local model; never fetch weights or call an API."""
 
-    def __init__(self, path):
+    def __init__(self, path, profile='symmetric', cache_size=512):
         if not Path(path).is_dir():
             raise ValueError('SOLAR_ENCODER_PATH must point to a local model directory')
+        if profile not in {'symmetric', 'e5'} or not 0 <= cache_size <= 1024:
+            raise ValueError('Encoder profile must be symmetric or e5; cache size must be 0..1024')
         model_type = import_module('sentence_transformers').SentenceTransformer
         self.model = model_type(str(Path(path).resolve()), local_files_only=True, device='cpu')
+        self.profile, self.cache_size = profile, cache_size
+        self.cache = OrderedDict()
+        self.lock = Lock()
 
     def __call__(self, texts):
-        return self.model.encode(texts, normalize_embeddings=True).tolist()
+        return self.model.encode(texts, normalize_embeddings=True, show_progress_bar=False).tolist()
+
+    def encode_pairs(self, query, passages):
+        # E5 was trained with asymmetric prefixes, including for non-English text.
+        # This is an explicit profile; a path name never silently chooses a model protocol.
+        texts = ([f'query: {query}', *[f'passage: {text}' for text in passages]]
+                 if self.profile == 'e5' else [query, *passages])
+        # The API schedules recalls in worker threads. Serialize the encoder and
+        # cache together so eviction cannot invalidate another in-flight recall.
+        with self.lock:
+            return self._cached(texts)
+
+    def _cached(self, texts):
+        keys = [hashlib.sha256(text.encode()).digest() for text in texts]
+        missing = {key: text for key, text in zip(keys, texts, strict=True) if key not in self.cache}
+        fresh = dict(zip(missing, self(list(missing.values())), strict=True)) if missing else {}
+        result = [self.cache.get(key, fresh.get(key)) for key in keys]
+        for key, vector in zip(keys, result, strict=True):
+            # Retain vectors and digests, never plaintext memory/query strings.
+            self.cache[key] = vector
+            self.cache.move_to_end(key)
+        while len(self.cache) > self.cache_size:
+            self.cache.popitem(last=False)
+        return result
 
 
 def similarities(query, texts, encoder=None):
     if not encoder:
         query_terms = terms(query)
         return [len(query_terms & terms(text)) / max(1, len(query_terms | terms(text))) for text in texts]
-    vectors = encoder([query, *texts])
+    vectors = encoder.encode_pairs(query, texts) if hasattr(encoder, 'encode_pairs') else encoder([query, *texts])
     if len(vectors) != len(texts) + 1 or not vectors or not vectors[0]:
         raise ValueError('Invalid embedding count or dimensions')
     dimension = len(vectors[0])

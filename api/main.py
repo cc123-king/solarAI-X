@@ -400,7 +400,7 @@ mcp_client = MCPClient()
 
 # Durable local state. Separate from .env, model files and generated artifacts.
 state_store = TaskStore(os.getenv("SOLAR_STATE_DB", str(GENERATED_FILES_ROOT / "data" / "state.sqlite3")))
-encoder = LocalEncoder(os.environ['SOLAR_ENCODER_PATH']) if os.getenv('SOLAR_ENCODER_PATH') else None
+encoder = LocalEncoder(os.environ['SOLAR_ENCODER_PATH'], os.getenv('SOLAR_ENCODER_PROFILE', 'symmetric')) if os.getenv('SOLAR_ENCODER_PATH') else None
 if os.getenv('SOLAR_TOOL_ROUTING', 'all') == 'semantic' and encoder is None:
     raise ValueError('Semantic tool routing requires SOLAR_ENCODER_PATH and a local embedding model')
 research_memory = ResearchMemory(state_store.path, namespace=os.getenv('SOLAR_MEMORY_NAMESPACE', 'local'), encoder=encoder)
