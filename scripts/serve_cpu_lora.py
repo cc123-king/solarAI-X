@@ -1,10 +1,10 @@
 """Loopback-only Transformers/PEFT CPU experiment service. This is not vLLM."""
 
-from pathlib import Path
 import argparse
-from contextlib import contextmanager, nullcontext
 import json
 import re
+from contextlib import contextmanager, nullcontext
+from pathlib import Path
 from threading import Lock
 from time import perf_counter
 from typing import Any
@@ -13,13 +13,13 @@ from uuid import uuid4
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from jsonschema import Draft202012Validator, ValidationError
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 ENGINE = "transformers-peft-cpu"
 
 
 def parse_tool_calls(text, tools):
-    matches = list(re.finditer(r"<tool_call>\s*(.*?)\s*</tool_call>", text, re.S))
+    matches = list(re.finditer(r"<tool_call>\s*(.*?)\s*</tool_call>", text, re.DOTALL))
     if ("<tool_call>" in text or "</tool_call>" in text) and not matches:
         raise ValueError("Incomplete model-generated tool call")
     catalog = {tool["function"]["name"]: tool["function"] for tool in tools}
@@ -60,10 +60,14 @@ def parse_tool_calls(text, tools):
                 },
             }
         )
-    content = re.sub(r"<tool_call>\s*.*?\s*</tool_call>", "", text, flags=re.S).strip()
+    content = re.sub(r"<tool_call>\s*.*?\s*</tool_call>", "", text, flags=re.DOTALL).strip()
     if "<tool_call>" in content or "</tool_call>" in content:
         raise ValueError("Incomplete extra tool-call envelope")
     return content or None, calls
+
+
+class StreamOptions(BaseModel):
+    include_usage: bool = False
 
 
 class ChatRequest(BaseModel):
@@ -74,15 +78,22 @@ class ChatRequest(BaseModel):
     max_tokens: int = Field(default=256, ge=1, le=512)
     temperature: float = Field(default=0, ge=0, le=2)
     stream: bool = False
+    stream_options: StreamOptions | None = None
     response_format: dict[str, Any] | None = None
     tool_choice: Any = None
+
+    @field_validator('tools', mode='before')
+    @classmethod
+    def normalize_optional_tools(cls, value):
+        # OpenAI-compatible callers may encode an absent catalog as null.
+        return [] if value is None else value
 
 
 class CPURuntime:
     def __init__(self, base_model, career_adapter, solar_adapter, threads=4):
         import torch
-        from transformers import AutoModelForCausalLM, AutoTokenizer
         from peft import PeftModel
+        from transformers import AutoModelForCausalLM, AutoTokenizer
 
         torch.set_num_threads(threads)
         torch.set_num_interop_threads(1)
@@ -314,6 +325,9 @@ def create_app(runtime):
                     )
                     + "\n\n"
                 )
+            if request.stream_options and request.stream_options.include_usage and 'usage' in result:
+                yield 'data: ' + json.dumps({'id': result['id'], 'object': 'chat.completion.chunk',
+                    'created': 0, 'model': result['model'], 'choices': [], 'usage': result['usage']}) + '\n\n'
             yield "data: [DONE]\n\n"
 
         return StreamingResponse(events(), media_type="text/event-stream")

@@ -37,6 +37,7 @@ def arguments():
     parser.add_argument('--api-port', type=port, default=18001)
     parser.add_argument('--ui-port', type=port, default=15173)
     parser.add_argument('--threads', type=int, default=4)
+    parser.add_argument('--max-output-tokens', type=int, default=256, help='CPU completion budget, 1..512 tokens')
     parser.add_argument('--startup-timeout', type=int, default=300, help='Readiness deadline per service in seconds')
     parser.add_argument('--state-dir', type=Path, default=ROOT / '.local' / 'resume-stack')
     parser.add_argument('--namespace', default='local-stack')
@@ -66,6 +67,8 @@ def validate(parser, args):
         parser.error('The four service ports must be distinct')
     if not 1 <= args.threads <= 32 or not 5 <= args.startup_timeout <= 1800:
         parser.error('Use 1..32 CPU threads and a 5..1800 second readiness deadline')
+    if not 1 <= args.max_output_tokens <= 512:
+        parser.error('CPU model output budget must be 1..512 tokens')
     if not 1 <= len(args.namespace) <= 80:
         parser.error('Memory namespace must contain 1..80 characters')
     if args.state_dir.exists() and not args.state_dir.is_dir():
@@ -80,6 +83,9 @@ def environment(args):
         'LLM_DEFAULT_MODEL': 'solar-tools', 'LLM_MODEL_NAME': '本地 LoRA',
         'LLM_MODELS': 'solar-tools|本地 LoRA,agent-base|本地基座',
         'LLM_REASONING_MODELS': '', 'LLM_STREAM_USAGE': 'true',
+        'LLM_MAX_OUTPUT_TOKENS': str(args.max_output_tokens),
+        'LLM_MAX_RETRIES': '0',
+        'SOLAR_TOOL_DESCRIPTIONS': 'summary',
         'MCP_SERVER_URL': f'http://127.0.0.1:{args.mcp_port}/sse', 'MCP_DEBUG': 'false',
         'SOLAR_API_HOST': '127.0.0.1', 'SOLAR_API_PORT': str(args.api_port),
         'SOLAR_API_BASE_URL': f'http://127.0.0.1:{args.api_port}/api',

@@ -202,8 +202,11 @@ llm_base_url = (
 )
 llm_default_model = os.getenv("LLM_DEFAULT_MODEL", "deepseek-chat").strip()
 llm_model_name = os.getenv("LLM_MODEL_NAME", llm_default_model).strip()
+llm_max_retries = int(os.getenv('LLM_MAX_RETRIES', '1'))
+if not 0 <= llm_max_retries <= 2:
+    raise ValueError('LLM_MAX_RETRIES must be 0..2')
 client = (
-    AsyncOpenAI(api_key=llm_api_key, base_url=llm_base_url, timeout=45.0, max_retries=1)
+    AsyncOpenAI(api_key=llm_api_key, base_url=llm_base_url, timeout=45.0, max_retries=llm_max_retries)
     if llm_api_key
     else None
 )
@@ -480,6 +483,7 @@ class ChatRequest(BaseModel):
     messages: List[Message] = Field(..., min_length=1)
     conversation_id: Optional[str] = None
     model: str = llm_default_model
+    tools_enabled: bool = True
 
 class Conversation(BaseModel):
     id: str
@@ -551,6 +555,9 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
             {"role": "system", "content": RUNTIME_INSTRUCTION + "\n" + CONTEXT_INSTRUCTION},
             *conversation_messages(incoming, stored),
         ]
+        if not chat_request.tools_enabled:
+            openai_messages[0]['content'] += ('\nThe user disabled tools for this turn. Explain or clarify only; '
+                'never claim that a prediction, calculation, search or plot was executed.')
         recall = await asyncio.to_thread(research_memory.recall, chat_request.messages[-1].content)
         if recall['memories']:
             openai_messages.insert(1, {'role': 'system', 'content':
@@ -563,7 +570,7 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
         
         # 获取MCP工具列表
         available_tools = []
-        if mcp_client.session:
+        if chat_request.tools_enabled and mcp_client.session:
             try:
                 tools = await mcp_client.list_tools()
                 tools, routing = await asyncio.to_thread(route_tools, chat_request.messages[-1].content, tools,
@@ -574,7 +581,8 @@ async def generate_stream_response(chat_request: ChatRequest, disconnect_event: 
                     "type": "function",
                     "function": {
                         "name": tool.name,
-                        "description": tool.description,
+                        "description": ((tool.description or '').split('\n', 1)[0]
+                            if os.getenv('SOLAR_TOOL_DESCRIPTIONS', 'full') == 'summary' else tool.description),
                         "parameters": model_parameters(tool.name, tool.inputSchema)
                     }
                 } for tool in tools]
@@ -1161,6 +1169,7 @@ async def health_check():
         "research_memory": {'available': True, 'scope': 'local_single_user',
                             'backend': 'local_semantic' if encoder else 'lexical'},
         "tool_routing": os.getenv('SOLAR_TOOL_ROUTING', 'all'),
+        "tool_descriptions": os.getenv('SOLAR_TOOL_DESCRIPTIONS', 'full'),
         "telemetry": {'metrics': True, 'otlp_configured': bool(os.getenv('SOLAR_OTLP_ENDPOINT'))},
     }
 

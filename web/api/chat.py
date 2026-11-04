@@ -24,12 +24,13 @@ class SSEClient:
         self.headers["Accept"] = "text/event-stream"
         self.headers["Cache-Control"] = "no-cache"
     def events(self):
-        response = requests.post(self.url, json=self.params, headers=self.headers, stream=True)
-        for line in response.iter_lines():
-            if line:
-                line = line.decode('utf-8')
-                if line.startswith('data: '):
-                    yield json.loads(line[6:])
+        with requests.post(self.url, json=self.params, headers=self.headers, stream=True, timeout=(5, 90)) as response:
+            response.raise_for_status()
+            for line in response.iter_lines():
+                if line:
+                    line = line.decode('utf-8')
+                    if line.startswith('data: '):
+                        yield json.loads(line[6:])
 
 def create_conversation():
     try:
@@ -99,13 +100,15 @@ def update_model(model_name):
     current_session["selected_model"] = model_name
     return f"已切换到模型: {model_name}"
 
-def send_message(message, chatbot):
+def send_message(message, chatbot, tools_enabled=True):
     if not message:
-        return chatbot, "请输入消息"
+        yield chatbot, "请输入消息"
+        return
     if not current_session["conversation_id"]:
         result, empty_chatbot = create_conversation()
         if "已创建新对话" not in result:
-            return chatbot, result
+            yield chatbot, result
+            return
     chatbot.append({"role": "user", "content": message})
     yield chatbot, ""
     all_messages = current_session["messages"].copy()
@@ -113,7 +116,8 @@ def send_message(message, chatbot):
     request_data = {
         "conversation_id": current_session["conversation_id"],
         "model": current_session["selected_model"],
-        "messages": all_messages
+        "messages": all_messages,
+        "tools_enabled": bool(tools_enabled),
     }
     try:
         client = SSEClient(f"{API_BASE_URL}/chat/send", params=request_data)
@@ -123,6 +127,7 @@ def send_message(message, chatbot):
         image_info = []
         buffer_size = 0
         update_threshold = 50
+        failed, completed = False, False
         chatbot.append({"role": "assistant", "content": ""})
         for event in client.events():
             event_type = event.get("type", "")
@@ -154,14 +159,23 @@ def send_message(message, chatbot):
                     buffer_size = 0
                     yield chatbot, ""
             elif event_type == "error":
+                failed = True
                 chatbot[-1]["content"] = f"错误: {content}"
                 chatbot[-1]["error"] = True
                 yield chatbot, f"发生错误: {content}"
                 break
             elif event_type == "done":
+                completed = True
                 chatbot[-1]["content"] = assistant_response
                 yield chatbot, ""
                 break
+        if failed:
+            return
+        if not completed:
+            chatbot[-1]['error'] = True
+            chatbot[-1]['content'] = assistant_response + '\n回答中断，请重试；当前内容未标记为完成。'
+            yield chatbot, '回答流未完成'
+            return
         current_session["messages"].append({"role": "user", "content": message})
         current_session["messages"].append({
             "role": "assistant",
