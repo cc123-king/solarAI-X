@@ -11,6 +11,7 @@ for _thread_variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THR
     os.environ.setdefault(_thread_variable, "1")
 
 import base64
+import json
 import math
 import io
 from typing import Annotated, Dict, Any, List, Tuple, Optional, Literal
@@ -29,6 +30,7 @@ except ImportError:
     TabularPredictor = None
     TabularDataset = None
 from mcp.server.fastmcp import FastMCP, Context, Image
+from mcp.types import CallToolResult, TextContent
 from starlette.applications import Starlette
 from mcp.server.sse import SseServerTransport
 from starlette.requests import Request
@@ -43,6 +45,7 @@ from file_access import generated_output_directory
 from pathlib import Path
 # 导入钙钛矿预测相关模块
 from mlutil import predict_perovskite_params_ml, get_model_status
+from topcon_public import configured_model, TopconUnavailable, TopconDomainError
 from aging_utils import predict_aging_curve, get_default_aging_params
 from bandgap_baseline import BaselineDomainError
 from bandgap_utils import (
@@ -130,6 +133,13 @@ def fig_to_image(fig: Figure) -> Image:
     img_data = buf.getvalue()
     return Image(data=img_data, format="png")
 
+
+def plot_response(result: dict, image: Image, save_file: bool) -> Any:
+    if save_file:
+        return result
+    return CallToolResult(content=[image.to_image_content(),
+        TextContent(type='text', text=json.dumps(result['text']))], structuredContent=result)
+
 @mcp.tool()
 async def draw_curve(
     x_data: list,         # x轴数据列表
@@ -142,7 +152,7 @@ async def draw_curve(
     fig_size: list = [10, 6], # 图表尺寸 [宽, 高]
     save_file: bool = True, # 是否保存为文件
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> Any:
     """
     绘制自定义曲线图
     
@@ -216,7 +226,7 @@ async def draw_curve(
     result["text"] = {}
     result["text"]["file_path"] = file_path
     
-    return result
+    return plot_response(result, curve_image, save_file)
 
 @mcp.tool()
 async def draw_table(
@@ -227,7 +237,7 @@ async def draw_table(
     fig_size: list = [10, 6], # 图表尺寸 [宽, 高]
     save_file: bool = True,  # 是否保存为文件
     ctx: Context = None
-) -> Dict[str, Any]:
+) -> Any:
     """
     绘制数据表格
     
@@ -264,11 +274,11 @@ async def draw_table(
     num_rows = len(table_data)
     num_cols = len(table_data[0]) if num_rows > 0 else 0
     
-    if col_labels is None:
-        col_labels = [f"列 {i+1}" for i in range(num_cols)]
+    if col_labels is None or col_labels == []:
+        col_labels = [f"Column {i+1}" for i in range(num_cols)]
     
-    if row_labels is None:
-        row_labels = [f"行 {i+1}" for i in range(num_rows)]
+    if row_labels is None or row_labels == []:
+        row_labels = [f"Row {i+1}" for i in range(num_rows)]
     
     # 创建图形和表格
     fig, ax = plt.subplots(figsize=(fig_size[0], fig_size[1]))
@@ -327,7 +337,33 @@ async def draw_table(
     result["text"] = {}
     result["text"]["file_path"] = file_path
     
-    return result
+    return plot_response(result, table_image, save_file)
+
+@mcp.tool()
+async def predict_topcon_public(
+    inputs: Annotated[List[Dict[str, float]], Field(min_length=1, max_length=32)],
+) -> Dict[str, Any]:
+    """Predict 1-32 TOPCon records with an explicitly configured public research surrogate.
+
+    Each record MUST supply all 18 source-native features: T_Si, T_SiO2,
+    T_PolySi, Me, Mh, Emitter_Depth, Inner_Diffusion_Depth, Rs, Na_Top,
+    Nd_Rear, Dit_Si_SiOx, Dit_SiOx_Poly, Dit_Emitter, Cap_Area, Nt_top,
+    Nt_rear, Cap_Area_Defect, Taun_PolySi. Preserve the public CSV units;
+    do not map the old 13-feature solar schema or invent missing inputs.
+    Returns Vm/Im/Voc/Jsc/FF/Eff with source DOI, heldout metrics and domain
+    checks. Research-data surrogate, no new device experiments or full JV
+    prediction. Supports explicit parameter sweeps by passing complete rows.
+    中文：公开TOPCon太阳能电池单条/批量性能预测，必须完整提供源数据18字段。
+    """
+    try:
+        return {'text': configured_model().predict(inputs)}
+    except TopconUnavailable as error:
+        return {'text': {'status': 'unavailable', 'code': 'model_unavailable',
+                         'error': str(error)}}
+    except TopconDomainError as error:
+        return {'text': {'status': 'error', 'code': 'topcon_out_of_domain',
+                         'error': str(error)}}
+
 
 @mcp.tool()
 async def simulate_solar_cell(

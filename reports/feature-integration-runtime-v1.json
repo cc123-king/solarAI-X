@@ -1,0 +1,158 @@
+{
+  "created_at": "2026-11-04T05:16:15.148610+00:00",
+  "report_version": 1,
+  "business_release_status": "RELEASE_GATES_NOT_MET",
+  "paid_model_calls": 0,
+  "new_training_runs": 0,
+  "new_model_downloads": 0,
+  "not_verified": [
+    "enterprise_materials_and_business_scoring",
+    "enterprise_identity",
+    "production_monitoring_capacity_cost",
+    "mineru_and_visual_engines",
+    "browser_visual_qa"
+  ],
+  "receipt_storage": "Raw receipts remain in the parent workspace local-checks; no source documents or model drafts published.",
+  "scope": "synthetic_local_runtime_smoke_not_frozen_business_evaluation",
+  "tests": {
+    "focused": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "elapsed_seconds": 29.238,
+      "timestamp": "2026-11-04T12:45:56.761312+08:00",
+      "receipt": "local-checks/round8-solar-focus-final.xml",
+      "receipt_sha256": "5d67ebb2900dde42dd6a73203e2de6ea9fdfbc7553c6882878cfd45ac3a3ccfb"
+    },
+    "full": {
+      "tests": 297,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "elapsed_seconds": 55.948,
+      "timestamp": "2026-11-04T12:51:15.207458+08:00",
+      "receipt": "local-checks/round8-solar-all-repaired.xml",
+      "receipt_sha256": "7151fa213a5eeb28b3c65cf6c5c6940b585c72c5e1dcc4d7a358b02393982324"
+    }
+  },
+  "source_sha256_lf": {
+    "api/main.py": "22f8c949c2c69abe0b83e81f09224a3f9f6e353d7f5d5adba25e2ac1b55ab99a",
+    "scripts/run_local_stack.py": "7464eb24817be9be5f51ba388222cc2fb4757755785a3cfb6e94c63f98a7229b",
+    "scripts/serve_cpu_lora.py": "a3fe62aaa0ab5641e2c7742f819633139a49f7b720e8be3a9d535c3a5c2bc00a",
+    "web/api/chat.py": "63188b28c8b5a5ec7c48d0b227eeefbaf17789dfa7560ed057b8b57d4b5ff48a",
+    "web/ui/chat.py": "6526b2f2a4a194deccd7f40eaa0ee2dca94976174efba733ed55075554c3504d",
+    "tests/test_local_stack.py": "94aa674c262b0bb785f14320fe8d0bffb04e84ef2c547454a805b1b8a7985abc",
+    "tests/test_memory_interface.py": "acdb136d631442e214829e1da3b77d19f7f814ac80a3ebc5f97b402e3515578d",
+    "tests/test_cpu_stream_usage.py": "bceb443253dc34a49cc139743255b6eed76f0483dfba59aa4c95c5cc3654bfe2",
+    "tests/test_web_chat_errors.py": "5ded2bc65b460bf0f7454db70c49785cb9d6cd40d3e828658059c1c47768cbac"
+  },
+  "runtime": {
+    "model": "Qwen2.5-0.5B-Instruct",
+    "adapter": "solar-lora-20261102-v1",
+    "encoder": "multilingual-e5-small",
+    "device": "cpu",
+    "threads": 4,
+    "max_output_tokens": 256,
+    "automatic_model_retries": 0,
+    "tool_descriptions": "summary"
+  },
+  "health": {
+    "status": "ok",
+    "mcp_connected": true,
+    "research_memory": {
+      "available": true,
+      "scope": "local_single_user",
+      "backend": "local_semantic"
+    },
+    "tool_routing": "semantic"
+  },
+  "live_checks": [
+    {
+      "name": "gradio_save_memory",
+      "passed": true
+    },
+    {
+      "name": "gradio_load_memory",
+      "passed": true
+    },
+    {
+      "name": "gradio_recall_memory",
+      "passed": true
+    },
+    {
+      "name": "gradio_refresh_memory",
+      "passed": true
+    },
+    {
+      "name": "real_chat_agent-base",
+      "passed": true,
+      "http": 200,
+      "seconds": 2.661,
+      "status": "completed"
+    },
+    {
+      "name": "real_chat_solar-tools",
+      "passed": true,
+      "http": 200,
+      "seconds": 1.569,
+      "status": "completed"
+    },
+    {
+      "name": "real_tool_analysis",
+      "passed": true,
+      "http": 200,
+      "seconds": 25.38,
+      "status": "completed"
+    },
+    {
+      "name": "gradio_delete_memory",
+      "passed": true
+    },
+    {
+      "name": "deleted_memory_excluded",
+      "passed": true
+    }
+  ],
+  "actual_tool": {
+    "name": "predict_perovskite_bandgap",
+    "arguments": {
+      "perovskite_type": "MAPbIBr",
+      "Br_percentage": 0.5
+    },
+    "bandgap": 1.64,
+    "unit": "eV",
+    "validation_status": "formula_only",
+    "empirical_accuracy_verified": false
+  },
+  "observed_token_metrics": {
+    "input": 7455,
+    "output": 114
+  },
+  "owned_service_fault_cleanup": {
+    "passed": true,
+    "launcher_exit_code": 1,
+    "initial_sample_after_seconds": 6.260981,
+    "initial_sample_was_still_cleaning": true,
+    "final_listeners": [],
+    "final_owned_processes": [],
+    "final_lock_exists": false,
+    "scope": "development_cleanup_not_restart_or_production_recovery"
+  },
+  "static_checks": {
+    "ruff": "passed_for_changed_nonlegacy_files"
+  },
+  "preserved_failures": [
+    "round8-live-observations.json",
+    "round8-null-and-context-failure.json"
+  ],
+  "missing_original_predictors": [
+    "models/solar",
+    "models/perovskite_narrow",
+    "models/perovskite_wide"
+  ],
+  "notes": [
+    "A single short tool request passing does not establish recall, answer quality or load capacity.",
+    "An earlier redirected launcher was already gone before failure injection; its residual children were manually verified and cleaned."
+  ]
+}

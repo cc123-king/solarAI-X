@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 import sys
 from pathlib import Path
@@ -9,6 +10,15 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "api"))
 from retrieval_utils import lexical_search
 from tool_runtime import ToolResultError, tool_result_payload
+
+
+def test_empty_optional_labels_render_table_from_observed_model_call():
+    import mcpserver
+    result = asyncio.run(mcpserver.draw_table(
+        [[7, 8], [11, 13]], col_labels=['A', 'B'], row_labels=[], save_file=False))
+    assert result.structuredContent['text']['file_path'] is None
+    images = [item for item in result.content if item.type == 'image']
+    assert len(images) == 1 and base64.b64decode(images[0].data).startswith(b'\x89PNG\r\n\x1a\n')
 
 
 @pytest.mark.parametrize(

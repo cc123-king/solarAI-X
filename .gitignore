@@ -77,7 +77,7 @@ __pycache__/
 /web/build
 
 # Vite
-.vite/ 
+.vite/
 
 test.py
 
@@ -94,6 +94,8 @@ outputs/
 models/solar/
 models/perovskite_narrow/
 models/perovskite_wide/
+models/topcon_public/
+*.npz
 
 web2/node_modules
 
@@ -101,3 +103,10 @@ web2/node_modules
 data/
 **/*.sqlite3
 **/*.sqlite3-*
+reports/resume-upgrade-tests.xml
+reports/otel-tests.xml
+/evaluation/fixtures_v6/index/
+/reports/gaps-local-tests.xml
+
+# Isolated local launcher state and logs
+/.local/

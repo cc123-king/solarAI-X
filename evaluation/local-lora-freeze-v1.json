@@ -1,0 +1,6 @@
+{
+  "fixture_sha256": "8ba04bfa8be8a4ccfe143368408223135a6fb7f09496e7b4fd2a24c6089af27c",
+  "frozen_at": "2026-11-02T14:47:07.825697+00:00",
+  "used_for_training": false,
+  "policy": "one pass per alias; retain failures; no post-result training"
+}

@@ -102,8 +102,10 @@ def test_tracked_stream_cancellation_records_status_and_closes(monkeypatch, tmp_
             self.closed = True
 
     stream = DelayedStream()
+    acquired = asyncio.Event()
 
     async def create(**kwargs):
+        acquired.set()
         return stream
 
     monkeypatch.setattr(
@@ -126,7 +128,7 @@ def test_tracked_stream_cancellation_records_status_and_closes(monkeypatch, tmp_
                 pass
 
         task = asyncio.create_task(consume())
-        await asyncio.sleep(0.03)
+        await asyncio.wait_for(acquired.wait(), timeout=5)
         await main.cancel_task(task_id)
         try:
             await task

@@ -1,0 +1,58 @@
+{
+  "train_seeds": 12,
+  "validation_seeds": 4,
+  "declared_group_overlap": false,
+  "status": "training_completed",
+  "limitation": "Synthetic pipeline seeds; not a demonstrated quality-improving fine-tuning corpus.",
+  "base_model_id": "Qwen/Qwen2.5-0.5B-Instruct",
+  "base_model_config_sha256": "18e18afcaccafade98daf13a54092927904649e1dd4eba8299ab717d5d94ff45",
+  "train_sha256": "12355c7d7fe28b7bfe15079c8e2b4a768d5eefbe4f406aed952e1dfae09e9f6e",
+  "validation_sha256": "475cdd8cf6f9d3b8eb6051d44fd201b9ace19a9a7cd945300881841c15e91886",
+  "trainable_parameters": 2162688,
+  "total_parameters": 496195456,
+  "train_metrics": {
+    "train_runtime": 514.6426,
+    "train_samples_per_second": 0.023,
+    "train_steps_per_second": 0.006,
+    "total_flos": 40675348454400.0,
+    "train_loss": 0.029561232309788465,
+    "epoch": 1.0
+  },
+  "validation_metrics": {
+    "eval_loss": 0.009846937842667103,
+    "eval_runtime": 50.6306,
+    "eval_samples_per_second": 0.079,
+    "eval_steps_per_second": 0.079,
+    "epoch": 1.0
+  },
+  "versions": {
+    "torch": "2.13.0",
+    "transformers": "4.57.1",
+    "peft": "0.17.1",
+    "accelerate": "1.10.1"
+  },
+  "heldout_agent_evaluation_completed": false,
+  "cpu_threads": 4,
+  "adapter_sha256": "ea3ba0595e074e83c11254f25e11a9ddcbbd3102590fffe200e7786c7b507701",
+  "base_download_receipt": {
+    "model_id": "Qwen/Qwen2.5-0.5B-Instruct",
+    "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+    "files": {
+      "config.json": "18e18afcaccafade98daf13a54092927904649e1dd4eba8299ab717d5d94ff45",
+      "generation_config.json": "e558847a8b4402616f1273797b015104dc266fe4b520056fca88823ba8f8ebe6",
+      "merges.txt": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+      "model.safetensors": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+      "tokenizer.json": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+      "tokenizer_config.json": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+      "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+    },
+    "license_review_source": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
+    "paid_api_calls": 0
+  },
+  "evidence_scope": "actual_cpu_training_and_reload; synthetic_12_train_4_validation; no generalization claim",
+  "normalized_source_sha256": {
+    "scripts/train_lora.py": "a71d5e5552204bedcdaea74c7b9230a0990083d318355e99f1e28fa67350f144",
+    "scripts/serve_cpu_lora.py": "6fabe810aad96a1f8d2a6534b6366ff06c52713720d8f55f3934ed12ee00bd96"
+  },
+  "raw_manifest_sha256": "41f4dce1c05148d7ceae1322b6f713b28201bb28bdd45e589a8ea705e19aa306"
+}

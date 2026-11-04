@@ -1,0 +1,24 @@
+{
+  "scope": "actual_trained_public_model_over_real_mcp_stdio",
+  "checks": {
+    "registered": true,
+    "single_prediction": true,
+    "batch_prediction": true,
+    "partial_batch_rejected": true,
+    "legacy_schema_rejected": true,
+    "result_reference_bound": true,
+    "unbound_plot_rejected": true,
+    "real_derived_table_rendered": true
+  },
+  "passed": true,
+  "paid_model_calls": 0,
+  "independent_new_experiments": false,
+  "new_model_quality_evaluation": false,
+  "model_sha256": "1dfebd147074d395d20a8f6064da561c9fc6c49096fbe8dd7de8690bc6cad4b8",
+  "source_sha256": "14479b042a29137d107aa7198eea4d82ab2804177c2e583074bf674cb54287d2",
+  "runtime_source_sha256": {
+    "api/mcpserver.py": "3897fb19c329c227b0a7b3d635d49f5b47db60e91e30c4108ca231642bc9f30d",
+    "api/topcon_public.py": "5048accbab8f22b6a514e30ed647a4eb867ddaba708955244ef1691c062ea007",
+    "api/execution_evidence.py": "0650f781c267092358d3cad5f53958f181884fbfe903d6f7305fdfe1b6434ccf"
+  }
+}

@@ -48,6 +48,7 @@ def test_expected_mcp_tools_are_registered() -> None:
         "draw_table",
         "simulate_solar_cell",
         "batch_simulate_solar_cell",
+        "predict_topcon_public",
         "search_embedded_text",
         "process_directory_for_embedding",
         "predict_perovskite_aging",

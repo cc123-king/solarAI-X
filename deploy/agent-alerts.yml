@@ -1,0 +1,38 @@
+groups:
+  - name: solar-agent
+    rules:
+      - alert: SolarAgentFailures
+        expr: rate(solar_tasks_total{kind="failed"}[5m]) / clamp_min(sum(rate(solar_tasks_total[5m])), 0.001) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Agent task failures exceed five percent
+      - alert: SolarAgentSlowTasks
+        expr: histogram_quantile(0.95, sum by (le) (rate(solar_duration_seconds_bucket{operation="task"}[5m]))) > 30
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Agent task P95 exceeds thirty seconds
+      - alert: SolarAgentTimeouts
+        expr: sum(rate(solar_failures_total{kind=~"tool:timeout|model:timeout"}[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Agent model or tool timeouts are sustained
+      - alert: SolarAgentInvalidCalls
+        expr: sum(rate(solar_failures_total{kind=~"protocol:invalid_json|protocol:invalid_arguments|tool:schema|tool:unauthorized_tool"}[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Agent generated invalid or unauthorized tool calls
+      - alert: SolarAgentAnswerRejected
+        expr: sum(rate(solar_failures_total{kind="answer:answer_validation"}[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Agent final answers repeatedly fail execution evidence validation

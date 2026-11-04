@@ -11,9 +11,28 @@ from dataclasses import dataclass
 from typing import Any, TypeVar
 
 from jsonschema import Draft202012Validator
+from openai import APIConnectionError, APITimeoutError
 
 T = TypeVar("T")
 READ_ONLY_RETRYABLE_TOOLS = frozenset({"search_embedded_text"})
+
+
+class ToolSchemaError(ValueError):
+    """Arguments violate the discovered local tool contract."""
+
+
+def failure_category(error):
+    if isinstance(error, (TimeoutError, APITimeoutError)):
+        return 'timeout'
+    if isinstance(error, ToolSchemaError):
+        return 'schema'
+    if isinstance(error, PermissionError):
+        return 'unauthorized_tool'
+    if isinstance(error, ToolResultError):
+        return 'tool_result'
+    if isinstance(error, (ConnectionError, OSError, APIConnectionError)):
+        return 'connection'
+    return 'internal'
 
 
 class ToolResultError(RuntimeError):
@@ -132,18 +151,18 @@ def tool_result_payload(result: Any) -> dict:
 def validate_tool_arguments(arguments: Any, schema: dict[str, Any]) -> None:
     """Validate object, finite JSON values and the discovered tool's schema."""
     if not isinstance(arguments, dict):
-        raise ValueError("工具参数必须是 JSON 对象")
+        raise ToolSchemaError("工具参数必须是 JSON 对象")
     try:
         json.dumps(arguments, allow_nan=False)
     except (ValueError, TypeError) as error:
-        raise ValueError("工具参数必须是有限数值组成的合法 JSON") from error
+        raise ToolSchemaError("工具参数必须是有限数值组成的合法 JSON") from error
 
     def reject_external_references(node: Any) -> None:
         if isinstance(node, dict):
             for keyword in ("$ref", "$dynamicRef", "$recursiveRef"):
                 reference = node.get(keyword)
                 if isinstance(reference, str) and not reference.startswith("#"):
-                    raise ValueError("工具 Schema 不允许外部引用")
+                    raise ToolSchemaError("工具 Schema 不允许外部引用")
             for value in node.values():
                 reject_external_references(value)
         elif isinstance(node, list):
@@ -160,7 +179,7 @@ def validate_tool_arguments(arguments: Any, schema: dict[str, Any]) -> None:
         error = errors[0]
         location = ".".join(str(part) for part in error.absolute_path) or "参数对象"
         # Do not echo supplied values, prompts or secrets into model/error logs.
-        raise ValueError(f"工具参数不符合 Schema：{location}（{error.validator}）")
+        raise ToolSchemaError(f"工具参数不符合 Schema：{location}（{error.validator}）")
 
 
 def log_event(logger: logging.Logger, level: int, event: str, **fields: Any) -> None:

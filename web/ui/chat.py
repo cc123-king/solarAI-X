@@ -1,4 +1,5 @@
 import gradio as gr
+from ui.memory import build_memory_controls
 from api.chat import (
     send_message, create_conversation, update_model, select_conversation, get_available_models, get_conversation_choices
 )
@@ -27,6 +28,7 @@ def build_chat_tab():
                 )
                 submit_btn = gr.Button("发送", variant="primary", scale=1)
             status = gr.Textbox(label="状态", interactive=False)
+            tools_enabled = gr.Checkbox(label='允许检索、预测和绘图工具（普通对话可关闭）', value=True)
         with gr.Column(scale=1):
             with gr.Accordion("模型选择", open=True):
                 model_dropdown = gr.Dropdown(
@@ -45,16 +47,17 @@ def build_chat_tab():
                 )
                 load_btn = gr.Button("加载对话")
                 refresh_btn = gr.Button("刷新列表")
+            build_memory_controls()
 
     # 创建包装函数来清空输入框
-    def send_and_clear(message, chatbot):
+    def send_and_clear(message, chatbot, use_tools):
         # 调用原始的send_message函数，它返回生成器
-        for chatbot_update, status_update in send_message(message, chatbot):
+        for chatbot_update, status_update in send_message(message, chatbot, use_tools):
             yield chatbot_update, status_update, ""  # 添加空字符串来清空输入框
     
     # 绑定事件
-    submit_btn.click(send_and_clear, [msg, chatbot], [chatbot, status, msg], queue=True)
-    msg.submit(send_and_clear, [msg, chatbot], [chatbot, status, msg], queue=True)
+    submit_btn.click(send_and_clear, [msg, chatbot, tools_enabled], [chatbot, status, msg], queue=True)
+    msg.submit(send_and_clear, [msg, chatbot, tools_enabled], [chatbot, status, msg], queue=True)
     new_chat_btn.click(create_conversation, [], [status, chatbot])
     model_btn.click(update_model, [model_dropdown], [status])
     load_btn.click(select_conversation, [history_dropdown], [chatbot, status])

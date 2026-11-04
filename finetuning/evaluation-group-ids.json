@@ -1,0 +1,4 @@
+{
+  "fixture_groups": ["development-v5", "acceptance-v6", "sealed-acceptance", "semantic-frozen-v1", "local-lora-probe-v1"],
+  "scope": "Declared evaluation group identifiers only; no sealed files are opened. Synthetic training_seed-only rows remain mandatory. This declaration alone does not prove semantic non-overlap."
+}

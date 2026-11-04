@@ -1,0 +1,10 @@
+{
+  "fixture_group": "local-lora-probe-v1",
+  "scope": "new diagnostic prompts, four-tool catalog, one model call then real MCP execution; too small for generalized fine-tuning benefit",
+  "cases": [
+    {"id":"l01","query":"Call draw_curve to plot x_data [2,4] against y_data [5,9].","expected_tool":"draw_curve","expected_arguments":{"x_data":[2,4],"y_data":[5,9]}},
+    {"id":"l02","query":"用 draw_table 将 [[7,8],[11,13]] 绘制为表格，列名为 A 和 B。","expected_tool":"draw_table","expected_arguments":{"table_data":[[7,8],[11,13]],"col_labels":["A","B"]}},
+    {"id":"l03","query":"Use predict_perovskite_bandgap with perovskite_type MAPbIBr, Br_percentage 0.23 and method formula.","expected_tool":"predict_perovskite_bandgap","expected_arguments":{"perovskite_type":"MAPbIBr","Br_percentage":0.23,"method":"formula"}},
+    {"id":"l04","query":"调用 search_embedded_text 在已有论文中查找 bandgap，query 为 bandgap，top_n 为 2。","expected_tool":"search_embedded_text","expected_arguments":{"query":"bandgap","top_n":2}}
+  ]
+}

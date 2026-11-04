@@ -57,7 +57,12 @@ def test_invalid_parameters_never_reach_tool(arguments):
     events = asyncio.run(collect_events(main, model, session))
     assert not session.calls
     assert events[-1]["type"] == "done"
-    assert any(message["role"] == "tool" for message in model.calls[1]["messages"])
+    if arguments in ['{"query":', "[]"]:
+        assert len(model.calls) == 1
+        assert any(event["type"] == "error" and "invalid_tool_arguments_" in str(event["content"]) for event in events)
+        assert not any(event["type"] == "content" for event in events)
+    else:
+        assert any(message["role"] == "tool" for message in model.calls[1]["messages"])
 
 
 def test_unknown_tool_is_rejected():
@@ -192,6 +197,9 @@ def test_legacy_mcp_error_is_traced_as_failed_not_completed(tmp_path, monkeypatc
         finally:
             main._task_context.reset(token)
     asyncio.run(scenario())
-    events = store.get(task_id)["events"]
+    events = [
+        event for event in store.get(task_id)["events"]
+        if event["kind"] in {"tool_started", "tool_failed", "tool_completed"}
+    ]
     assert [event["kind"] for event in events] == ["tool_started", "tool_failed"]
     assert events[-1]["payload"]["error_type"] == "ToolResultError"

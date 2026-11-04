@@ -28,3 +28,5 @@ PSKWD_DIR=D:\models\perovskite_wide
 ```
 
 仓库已经保留老化预测所需的`api/quxian_high500.pth`和`api/quxian_shiyan.xlsx`。大型AutoGluon模型建议通过模型制品仓库、Release或对象存储单独分发。
+
+新增公开 TOPCon 数值森林替代模型，由 `scripts/train_topcon_public.py` 在外部资源目录生成 `forest.npz` 和 `model-card.json`；以 `TOPCON_PUBLIC_MODEL_DIR` 指定并重启 API/MCP。模型使用原始18字段，不兼容旧13字段，不能替代钙钛矿预测器。数据许可、下载与质量边界见 [公开TOPCon说明](../docs/PUBLIC_TOPCON_RECOVERY.md)。权重不随 Git 分发。
